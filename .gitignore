@@ -27,6 +27,10 @@
 
 /public/packs
 /public/packs-test
+
+/public/uploads
+/public/diplomas
+
 /node_modules
 /yarn-error.log
 yarn-debug.log*
