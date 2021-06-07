@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   root 'main#index'
   post '/' => 'main#create'
-  # delete '/' => 'main#delete'
-  # get 'create' => 'create_diplomas'
+  resources :orders, only: [:show, :destroy]
+  # get 'diplomas' => 'main#diplomas'
+
 end

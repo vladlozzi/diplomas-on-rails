@@ -8,8 +8,8 @@
 /.bundle
 
 # Ignore all logfiles and tempfiles.
-/log/*
-/tmp/*
+/log
+/tmp
 !/log/.keep
 !/tmp/.keep
 
@@ -26,12 +26,10 @@
 /config/master.key
 
 /public/packs
-/public/packs-test
 
 /storage
-
 /vendor
-/node_modules
+
 /yarn-error.log
 yarn-debug.log*
 .yarn-integrity
