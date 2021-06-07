@@ -4,7 +4,7 @@ class MainController < ApplicationController
   end
 
   def create
-    unless params[:xml_file].nil?
+    if params[:xml_file].present?
       order = Order.new(name: params[:xml_file].original_filename, xml_file: params[:xml_file])
       unless order.save; end
     end
