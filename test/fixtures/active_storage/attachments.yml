@@ -1,0 +1,9 @@
+one_xml_file_attachment:
+  name: xml_file
+  record: one (Order)
+  blob: one_xml_blob
+
+two_xml_file_attachment:
+  name: xml_file
+  record: two (Order)
+  blob: two_xml_blob

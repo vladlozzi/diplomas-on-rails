@@ -11,15 +11,19 @@
 
 <% if @orders.count > 0 %>
   <table class="orders">
-    <tr>
-      <th>Назва замовлення</th><th colspan="2">Дії</th>
-    </tr>
-    <% @orders.each do |order| %>
+    <thead>
       <tr>
-        <td><%= order.name %></td>
-        <td><%= link_to "Деталі", order %></td>
-        <td><%= link_to "Видалити", order, method: :delete, data: { confirm: "Справді видалити?" } %></td>
+        <th>Назва замовлення</th><th colspan="2">Дії</th>
       </tr>
-    <% end %>
+    </thead>
+    <tbody>
+      <% @orders.each do |order| %>
+        <tr>
+          <td><%= order.name %></td>
+          <td><%= link_to "Деталі", order %></td>
+          <td><%= link_to "Видалити", order, method: :delete, data: { confirm: "Справді видалити?" } %></td>
+      </tr>
+      <% end %>
+    </tbody>
   </table>
 <% end %>
