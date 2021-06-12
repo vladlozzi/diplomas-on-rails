@@ -8,16 +8,11 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   test "should get show" do
     assert @order.xml_file.attached?
     assert @order.xml_file.attachment
-    # Далі цей тест не проходить:
-    # ActiveStorage::FileNotFoundError: ActiveStorage::FileNotFoundError
-    # Ймовірна причина - неправильно зроблені .yml.
-    # Прошу підказки експертів, де недобре, бо нагуглити так і не зміг.
-    assert @order.xml_file.download
-    p @order.xml_file.download.force_encoding('UTF-8')
+    assert_not_empty @order.xml_file.download
     get order_path(@order)
     assert_response :success
-    #assert_select 'h1', "Деталі замовлення на дипломи " + @order.name
-    #assert_select 'p', @order.xml_file.download.force_encoding('UTF-8')
+    assert_select 'h1', "Деталі замовлення на дипломи " + @order.name
+    assert_select 'p', @order.xml_file.download.force_encoding('UTF-8')
   end
 
   test "should get destroy" do

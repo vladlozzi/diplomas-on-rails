@@ -19,7 +19,7 @@
 Усі файли дипломів з одного замовлення упаковано в zip-архів. 
 
 Web-додаток створено з використанням фреймворку Ruby on Rails: 
-Ruby version 3+; Rails version 6.1+
+Ruby version 3+; Rails version 6.2+
 xml-файли замовлень, dotx-файли шаблонів, zip-архіви зберігаються 
 з використанням технології Active Storage.  
 

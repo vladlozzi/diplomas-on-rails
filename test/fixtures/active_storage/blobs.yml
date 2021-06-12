@@ -1,17 +1,14 @@
 one_xml_blob:
-  key: '12345'
-  filename: TestXMLFile1.xml
-  content_type: text/xml
-  metadata: '{"identified":true,"analyzed":true}'
-  service_name: 'test_fixtures'
-  byte_size: <%= File.size(Rails.root.join('test', 'fixtures', 'files', 'TestXMLFile1.xml')) %>
-  checksum: <%= Digest::MD5.file(Rails.root.join('test', 'fixtures', 'files', 'TestXMLFile1.xml')).base64digest %>
+  <%= ActiveStorage::FixtureSet.blob(
+        filename: "t1.xml",
+        content_type: "text/xml",
+        service_name: "test_fixtures"
+      ) %>
 
 two_xml_blob:
-  key: '54321'
-  filename: TestXMLFile2.xml
-  content_type: text/xml
-  metadata: '{"identified":true,"analyzed":true}'
-  service_name: 'test_fixtures'
-  byte_size: <%= File.size(Rails.root.join('test', 'fixtures', 'files', 'TestXMLFile2.xml')) %>
-  checksum: <%= Digest::MD5.file(Rails.root.join('test', 'fixtures', 'files', 'TestXMLFile2.xml')).base64digest %>
+  <%= ActiveStorage::FixtureSet.blob(
+        filename: "t2.xml",
+        content_type: "text/xml",
+        service_name: "test_fixtures"
+      ) %>
+
