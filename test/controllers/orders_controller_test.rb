@@ -23,5 +23,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_select 'table.orders tbody td a', "Деталі", count: 1
     assert_select 'table.orders tbody td a', "Видалити", count: 1
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 0
   end
+
 end

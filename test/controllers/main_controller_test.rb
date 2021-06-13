@@ -9,14 +9,15 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form'
     assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit]'
+    assert_select 'form input[type=submit]', count: 2
     assert_select 'table.orders', count: 1
-    assert_select 'table.orders thead th', "Назва замовлення"
-    assert_select 'table.orders thead th', "Дії"
-    assert_select 'table.orders tbody td', orders(:one).name, count: 1
-    assert_select 'table.orders tbody td', orders(:two).name, count: 1
-    assert_select 'table.orders tbody td a', "Деталі", count: 2
-    assert_select 'table.orders tbody td a', "Видалити", count: 2
+    assert_select 'table.orders thead tr th', "Назва замовлення"
+    assert_select 'table.orders thead tr th', "Дії"
+    assert_select 'table.orders tbody tr td', orders(:one).name, count: 1
+    assert_select 'table.orders tbody tr td', orders(:two).name, count: 1
+    assert_select 'table.orders tbody tr td a', "Деталі", count: 2
+    assert_select 'table.orders tbody tr td a', "Видалити", count: 2
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
   end
 
   test "must have attached file" do
@@ -31,12 +32,28 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert another.xml_file.attached?
     assert_redirected_to root_url
     follow_redirect!
-    assert_select 'table.orders tbody td', "Another.xml", count: 1
-    assert_select 'table.orders tbody td a', "Деталі", count: 3
-    assert_select 'table.orders tbody td a', "Видалити", count: 3
+    assert_select 'table.orders tbody tr td', "Another.xml", count: 1
+    assert_select 'table.orders tbody tr td a', "Деталі", count: 3
+    assert_select 'table.orders tbody tr td a', "Видалити", count: 3
     get order_url(another)
     assert_response :success
     assert_select 'h1', "Деталі замовлення на дипломи " + another.name
     assert_select 'p', another.xml_file.download.force_encoding('UTF-8')
+  end
+
+  test "should delete orders table" do
+    get root_url
+    assert_response :success
+    assert_select 'table.orders'
+    delete root_path
+    assert_redirected_to root_url
+    follow_redirect!
+    assert_select 'h1', "Підготовка до друку документів про вищу освіту"
+    assert_select 'p', count: 1
+    assert_select 'form'
+    assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
+    assert_select 'form input[type=file]', count: 1
+    assert_select 'form input[type=submit]', count: 1
+    assert_select 'table.orders', count: 0
   end
 end

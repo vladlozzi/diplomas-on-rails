@@ -10,4 +10,9 @@ class MainController < ApplicationController
     end
     redirect_to root_url
   end
+
+  def delete_orders
+    Order.delete_all
+    redirect_to root_url
+  end
 end

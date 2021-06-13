@@ -9,20 +9,27 @@
   <%= f.submit "Надіслати файл на сервер" %>
 <% end %>
 
-<% if @orders.count > 0 %>
+<% if @orders.size > 0 %>
   <table class="orders">
     <thead>
       <tr>
-        <th>Назва замовлення</th><th colspan="2">Дії</th>
+        <th>Назва замовлення</th><th colspan="3">Дії</th>
       </tr>
     </thead>
     <tbody>
+      <% order_index = 0 %>
       <% @orders.each do |order| %>
         <tr>
           <td><%= order.name %></td>
           <td><%= link_to "Деталі", order %></td>
           <td><%= link_to "Видалити", order, method: :delete, data: { confirm: "Справді видалити?" } %></td>
-      </tr>
+          <% if @orders.size > 1 && order_index == 0 %>
+            <td id="delete_orders" rowspan=<%= @orders.size %>>
+                <%= button_to "Видалити все", '/', method: :delete, data: { confirm: "Справді видалити все?" } %>
+            </td>
+          <% end %>
+          <% order_index += 1 %>
+        </tr>
       <% end %>
     </tbody>
   </table>
