@@ -13,6 +13,6 @@ class MainController < ApplicationController
 
   def delete_orders
     Order.delete_all
-    redirect_to root_url
+    redirect_to root_url, notice: "Усі замовлення видалено"
   end
 end

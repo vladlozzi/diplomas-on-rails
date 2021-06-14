@@ -7,7 +7,7 @@ class OrdersController < ApplicationController
   def destroy
     @order.destroy
     respond_to do |format|
-      format.html { redirect_to root_url, notice: "Замовлення успішно видалене." }
+      format.html { redirect_to root_url, notice: "Замовлення " + @order.name + " видалене" }
       format.json { head :no_content }
     end
   end

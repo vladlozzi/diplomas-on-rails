@@ -21,6 +21,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to root_url
     follow_redirect!
+    assert_select 'p.notice', "Замовлення " + @order.name + " видалене"
     assert_select 'table.orders tbody td a', "Деталі", count: 1
     assert_select 'table.orders tbody td a', "Видалити", count: 1
     assert_select 'table.orders tbody tr td form input[type=submit]', count: 0

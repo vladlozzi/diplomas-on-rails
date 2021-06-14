@@ -49,7 +49,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
     follow_redirect!
     assert_select 'h1', "Підготовка до друку документів про вищу освіту"
-    assert_select 'p', count: 1
+    assert_select 'p', count: 2
+    assert_select 'p.notice', "Усі замовлення видалено"
     assert_select 'form'
     assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
     assert_select 'form input[type=file]', count: 1
