@@ -3,6 +3,5 @@ Rails.application.routes.draw do
   post '/' => 'main#create'
   delete '/' => 'main#delete_orders'
   resources :orders, only: [:show, :destroy]
-  # get 'diplomas' => 'main#diplomas'
-
+  get 'diplomas' => 'main#get_diplomas'
 end

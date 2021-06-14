@@ -15,4 +15,9 @@ class MainController < ApplicationController
     Order.delete_all
     redirect_to root_url, notice: "Усі замовлення видалено"
   end
+
+  def get_diplomas
+    # Тут повинен бути код методу.
+    redirect_to root_url, notice: "Усі документи, які є в замовленнях, згенеровано"
+  end
 end

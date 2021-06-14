@@ -24,7 +24,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_select 'p.notice', "Замовлення " + @order.name + " видалене"
     assert_select 'table.orders tbody td a', "Деталі", count: 1
     assert_select 'table.orders tbody td a', "Видалити", count: 1
-    assert_select 'table.orders tbody tr td form input[type=submit]', count: 0
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
   end
 
 end

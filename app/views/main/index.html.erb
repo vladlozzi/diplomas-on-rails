@@ -24,9 +24,13 @@
           <td><%= link_to "Деталі", order %></td>
           <td><%= link_to "Видалити", order, method: :delete, data: { confirm: "Справді видалити?" } %></td>
           <% if @orders.size > 1 && order_index == 0 %>
-            <td id="delete_orders" rowspan=<%= @orders.size %>>
-                <%= button_to "Видалити все", '/', method: :delete, data: { confirm: "Справді видалити все?" } %>
+            <td id="del_exec_orders" rowspan=<%= @orders.size %>>
+              <%= button_to "Видалити все", '/', method: :delete, data: { confirm: "Справді видалити все?" } %>
+              <br><br>
+              <%= button_to "Згенерувати всі дипломи", 'diplomas', method: :get %>
             </td>
+          <% elsif @orders.size == 1 %>
+            <td><%= button_to "Згенерувати дипломи", 'diplomas', method: :get %></td>
           <% end %>
           <% order_index += 1 %>
         </tr>

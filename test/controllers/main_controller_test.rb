@@ -9,7 +9,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form'
     assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit]', count: 2
+    assert_select 'form input[type=submit]', count: 3
     assert_select 'table.orders', count: 1
     assert_select 'table.orders thead tr th', "Назва замовлення"
     assert_select 'table.orders thead tr th', "Дії"
@@ -17,7 +17,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'table.orders tbody tr td', orders(:two).name, count: 1
     assert_select 'table.orders tbody tr td a', "Деталі", count: 2
     assert_select 'table.orders tbody tr td a', "Видалити", count: 2
-    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 2
   end
 
   test "must have attached file" do
@@ -57,4 +57,13 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form input[type=submit]', count: 1
     assert_select 'table.orders', count: 0
   end
+
+  test "should generate diplomas" do
+    get root_url
+    assert_response :success
+    get diplomas_path
+    assert_redirected_to root_url
+    follow_redirect!
+  end
+
 end
