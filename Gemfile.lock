@@ -166,6 +166,9 @@ GEM
       rspec-support (~> 3.10.0)
     rspec-support (3.10.2)
     rubyzip (2.3.0)
+    sablon (0.3.2)
+      nokogiri (>= 1.8.5)
+      rubyzip (>= 1.1.1)
     sass-rails (6.0.0)
       sassc-rails (~> 2.1, >= 2.1.1)
     sassc (2.4.0)
@@ -232,6 +235,7 @@ DEPENDENCIES
   rake
   rexml
   rspec
+  sablon
   sass-rails (>= 6)
   selenium-webdriver
   spring
