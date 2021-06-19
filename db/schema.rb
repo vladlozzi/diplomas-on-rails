@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_06_11_200932) do
+ActiveRecord::Schema.define(version: 2021_06_17_121810) do
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -40,6 +40,19 @@ ActiveRecord::Schema.define(version: 2021_06_11_200932) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "diplomas", force: :cascade do |t|
+    t.string "seria"
+    t.string "number"
+    t.string "name", null: false
+    t.string "diploma_file"
+    t.integer "order_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["name"], name: "index_diplomas_on_name", unique: true
+    t.index ["order_id"], name: "index_diplomas_on_order_id"
+    t.index ["seria", "number"], name: "index_diplomas_on_seria_and_number", unique: true
+  end
+
   create_table "orders", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: 6, null: false
@@ -50,4 +63,5 @@ ActiveRecord::Schema.define(version: 2021_06_11_200932) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "diplomas", "orders"
 end

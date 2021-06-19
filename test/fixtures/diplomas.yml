@@ -1,0 +1,23 @@
+one:
+  seria: "B21"
+  number: "123456"
+  name: "1"
+  order: one (Order)
+
+two:
+  seria: "B21"
+  number: "654321"
+  name: "2"
+  order: one (Order)
+
+three:
+  seria: "M21"
+  number: "123456"
+  name: "3"
+  order: two (Order)
+
+four:
+  seria: "M21"
+  number: "654321"
+  name: "4"
+  order: two (Order)
