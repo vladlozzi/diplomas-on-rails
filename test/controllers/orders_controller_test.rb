@@ -11,6 +11,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_not_empty @order.xml_file.download
     get order_path(@order)
     assert_response :success
+    assert_select 'a', "Назад"
     assert_select 'h1', "Деталі замовлення на дипломи " + @order.name
     assert_select 'p', @order.xml_file.download.force_encoding('UTF-8')
   end

@@ -37,6 +37,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'table.orders tbody tr td a', "Видалити", count: 3
     get order_url(another)
     assert_response :success
+    assert_select 'a', "Назад"
     assert_select 'h1', "Деталі замовлення на дипломи " + another.name
     assert_select 'p', another.xml_file.download.force_encoding('UTF-8')
   end
