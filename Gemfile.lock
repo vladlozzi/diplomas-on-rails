@@ -235,6 +235,7 @@ DEPENDENCIES
   rake
   rexml
   rspec
+  rubyzip
   sablon
   sass-rails (>= 6)
   selenium-webdriver

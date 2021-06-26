@@ -1,5 +1,4 @@
 require "test_helper"
-
 class MainControllerTest < ActionDispatch::IntegrationTest
   test "get main page" do
     get root_url
@@ -60,11 +59,18 @@ class MainControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should generate diplomas" do
+    # Цей тест необхідно виконувати з порожнім файлом diplomas.yml
     get root_url
     assert_response :success
     get diplomas_path
-    assert_redirected_to root_url
-    follow_redirect!
+    assert_response :success
+    assert_equal Diploma.count, 2
+    assert_equal Diploma.first.diploma_file.filename.to_s, "master(blue).M21.000001.docx"
+    assert_equal Diploma.second.diploma_file.filename.to_s, "depre.specialist(blue).C21.000976.docx"
+    assert_not_nil Diploma.first.diploma_file.download
+    assert_not_nil Diploma.second.diploma_file.download
+    assert_not_empty Diploma.first.diploma_file.download
+    assert_not_empty Diploma.second.diploma_file.download
   end
 
 end

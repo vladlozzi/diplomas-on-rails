@@ -7,6 +7,7 @@ gem 'rspec'
 gem 'rake'
 gem 'rexml'
 gem 'sablon'
+gem 'rubyzip'
 # Bundle edge Rails instead:
 gem 'rails', github: 'rails/rails', branch: 'main'
 # Use Puma as the app server

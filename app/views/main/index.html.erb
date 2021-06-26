@@ -3,6 +3,7 @@
   На цьому сайті на основі інформації з замовлень ЄДЕБО (у форматі XML) можна створити<br>
   файли для друку дипломів молодшого бакалавра, бакалавра, магістра (у форматі Microsoft Word .docx).
 </p>
+
 <%= form_with do |f| %>
   <%= f.label "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:" %>
   <%= f.file_field :xml_file %>
@@ -27,10 +28,10 @@
             <td id="del_exec_orders" rowspan=<%= @orders.size %>>
               <%= button_to "Видалити все", '/', method: :delete, data: { confirm: "Справді видалити все?" } %>
               <br><br>
-              <%= button_to "Згенерувати всі дипломи", 'diplomas', method: :get %>
+              <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get %>
             </td>
           <% elsif @orders.size == 1 %>
-            <td><%= button_to "Згенерувати дипломи", 'diplomas', method: :get %></td>
+            <td><%= button_to "Отримати дипломи в zip", 'diplomas', method: :get %></td>
           <% end %>
           <% order_index += 1 %>
         </tr>
