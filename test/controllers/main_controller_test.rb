@@ -59,7 +59,9 @@ class MainControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should generate diplomas" do
-    # Цей тест необхідно виконувати з порожнім файлом diplomas.yml
+    Diploma.delete_all # до цього тесту видаляємо записи про дипломи, які є в тестовій базі,
+                       # оскільки контролер згенерує і збереже їх заново,
+                       # і буде конфлікт унікальності у полі Diploma.name
     get root_url
     assert_response :success
     get diplomas_path
