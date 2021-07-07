@@ -9,7 +9,7 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "order name must be unique" do
-    order = Order.new(name: "t1.xml")
+    order = Order.new(name: "t3.xml")
     assert order.invalid?
     assert order.errors[:name], "Такий файл вже є на сервері"
   end

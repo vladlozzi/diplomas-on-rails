@@ -16,16 +16,25 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_select 'p', @order.xml_file.download.force_encoding('UTF-8')
   end
 
-  test "should get destroy" do
-    assert_difference 'Order.count', -1 do
-      delete order_path(@order)
+  test "should upload file and delete order" do
+    Order.delete_all
+    file = fixture_file_upload(Rails.root.join('test/fixtures/files', 't1.xml'), 'text/xml')
+    assert_difference "Order.where(user: cookies['my_diplomas_cart']).count", 1 do
+      post root_path, params: { xml_file: file, user: cookies['my_diplomas_cart'] }
     end
     assert_redirected_to root_url
     follow_redirect!
-    assert_select 'p.notice', "Замовлення " + @order.name + " видалене"
     assert_select 'table.orders tbody td a', "Деталі", count: 1
     assert_select 'table.orders tbody td a', "Видалити", count: 1
     assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
+    order = Order.where(user: cookies['my_diplomas_cart'], name: 't1.xml').first
+    assert_difference "Order.where(user: cookies['my_diplomas_cart']).count", -1 do
+      delete order_path(order)
+    end
+    assert_redirected_to root_url
+    follow_redirect!
+    assert_select 'p.notice', "Замовлення " + order.name + " видалене"
+    assert_select 'table.orders', count: 0
   end
 
 end

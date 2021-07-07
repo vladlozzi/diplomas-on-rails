@@ -1,5 +1,6 @@
 require "test_helper"
 class MainControllerTest < ActionDispatch::IntegrationTest
+
   test "get main page" do
     get root_url
     assert_response :success
@@ -8,15 +9,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form'
     assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit]', count: 3
-    assert_select 'table.orders', count: 1
-    assert_select 'table.orders thead tr th', "Назва замовлення"
-    assert_select 'table.orders thead tr th', "Дії"
-    assert_select 'table.orders tbody tr td', orders(:one).name, count: 1
-    assert_select 'table.orders tbody tr td', orders(:two).name, count: 1
-    assert_select 'table.orders tbody tr td a', "Деталі", count: 2
-    assert_select 'table.orders tbody tr td a', "Видалити", count: 2
-    assert_select 'table.orders tbody tr td form input[type=submit]', count: 2
+    assert_select 'form input[type=submit]', count: 1
+    assert_select 'table.orders', count: 0
   end
 
   test "must have attached file" do
@@ -24,16 +18,19 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select 'form input[type=file]', count: 1
     file = fixture_file_upload(Rails.root.join('test/fixtures/files', 'Another.xml'), 'text/xml')
-    assert_difference 'Order.count', 1 do
-      post root_path, params: { xml_file: file }
+    assert_difference "Order.where(user: cookies['my_diplomas_cart']).count", 1 do
+      post root_path, params: { xml_file: file, user: cookies['my_diplomas_cart'] }
     end
-    another = Order.where(name: 'Another.xml').first
+    another = Order.where(user: cookies['my_diplomas_cart'], name: 'Another.xml').first
     assert another.xml_file.attached?
     assert_redirected_to root_url
     follow_redirect!
+    assert_select 'table.orders thead tr th', "Назва замовлення"
+    assert_select 'table.orders thead tr th', "Дії"
     assert_select 'table.orders tbody tr td', "Another.xml", count: 1
-    assert_select 'table.orders tbody tr td a', "Деталі", count: 3
-    assert_select 'table.orders tbody tr td a', "Видалити", count: 3
+    assert_select 'table.orders tbody tr td a', "Деталі", count: 1
+    assert_select 'table.orders tbody tr td a', "Видалити", count: 1
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
     get order_url(another)
     assert_response :success
     assert_select 'a', "Назад"
@@ -41,10 +38,38 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'p', another.xml_file.download.force_encoding('UTF-8')
   end
 
-  test "should delete orders table" do
+  test "should upload files, generate diplomas and delete orders from table" do
+    Diploma.delete_all # До цього тесту видаляємо записи про дипломи, які є в тестовій базі,
+                        # оскільки контролер згенерує і збереже їх заново,
+                        # і буде конфлікт унікальності у полі Diploma.name
     get root_url
     assert_response :success
+    assert_select 'table.orders', count: 0
+    file = fixture_file_upload(Rails.root.join('test/fixtures/files', 't1.xml'), 'text/xml')
+    assert_difference "Order.where(user: cookies['my_diplomas_cart']).count", 1 do
+      post root_path, params: { xml_file: file, user: cookies['my_diplomas_cart'] }
+    end
+    file = fixture_file_upload(Rails.root.join('test/fixtures/files', 't2.xml'), 'text/xml')
+    assert_difference "Order.where(user: cookies['my_diplomas_cart']).count", 1 do
+      post root_path, params: { xml_file: file, user: cookies['my_diplomas_cart'] }
+    end
+    assert_redirected_to root_url
+    follow_redirect!
     assert_select 'table.orders'
+    assert_select 'table.orders tbody tr td', "t1.xml", count: 1
+    assert_select 'table.orders tbody tr td', "t2.xml", count: 1
+    assert_select 'table.orders tbody tr td a', "Деталі", count: 2
+    assert_select 'table.orders tbody tr td a', "Видалити", count: 2
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 2
+    get diplomas_path
+    assert_response :success
+    assert_equal Diploma.count, 2
+    assert_equal Diploma.first.diploma_file.filename.to_s, "master(blue).M21.000001.docx"
+    assert_equal Diploma.second.diploma_file.filename.to_s, "depre.specialist(blue).C21.000976.docx"
+    assert_not_nil Diploma.first.diploma_file.download
+    assert_not_nil Diploma.second.diploma_file.download
+    assert_not_empty Diploma.first.diploma_file.download
+    assert_not_empty Diploma.second.diploma_file.download
     delete root_path
     assert_redirected_to root_url
     follow_redirect!
@@ -56,23 +81,6 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form input[type=file]', count: 1
     assert_select 'form input[type=submit]', count: 1
     assert_select 'table.orders', count: 0
-  end
-
-  test "should generate diplomas" do
-    Diploma.delete_all # до цього тесту видаляємо записи про дипломи, які є в тестовій базі,
-                       # оскільки контролер згенерує і збереже їх заново,
-                       # і буде конфлікт унікальності у полі Diploma.name
-    get root_url
-    assert_response :success
-    get diplomas_path
-    assert_response :success
-    assert_equal Diploma.count, 2
-    assert_equal Diploma.first.diploma_file.filename.to_s, "master(blue).M21.000001.docx"
-    assert_equal Diploma.second.diploma_file.filename.to_s, "depre.specialist(blue).C21.000976.docx"
-    assert_not_nil Diploma.first.diploma_file.download
-    assert_not_nil Diploma.second.diploma_file.download
-    assert_not_empty Diploma.first.diploma_file.download
-    assert_not_empty Diploma.second.diploma_file.download
   end
 
 end

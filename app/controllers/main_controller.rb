@@ -1,4 +1,5 @@
 class MainController < ApplicationController
+  before_action :set_cookies
   require "sablon"
 
   DOC_TEMPLATES = {
@@ -18,26 +19,29 @@ class MainController < ApplicationController
     "10" => " жовтня / October ", "11" => " листопада / November ", "12" => " грудня / December "
   }
 
-  def initialize
-    super
-    @orders = Order.order(:name)
-  end
-
   def index
   end
 
   def create
-    if params[:xml_file].present?
-      order = Order.new(name: params[:xml_file].original_filename, xml_file: params[:xml_file])
+    if cookies[:my_diplomas_cart].present? && params[:xml_file].present?
+      order = Order.new(name: params[:xml_file].original_filename,
+                        xml_file: params[:xml_file],
+                        user: cookies[:my_diplomas_cart]
+      )
       order.save
     end
     redirect_to root_url
   end
 
   def delete_orders
-    Diploma.delete_all # Спочатку видаляємо всі дипломи, бо вони належать замовленням
-    Order.delete_all
-    redirect_to root_url, notice: "Усі замовлення видалено"
+    if cookies[:my_diplomas_cart].present?
+      @orders.each do |order|
+        Diploma.delete_by(order_id: order.id) # Спочатку видаляємо всі дипломи, бо вони належать замовленням
+        order.destroy
+      end
+      cookies.delete :my_diplomas_cart
+      redirect_to root_url, notice: "Усі замовлення видалено"
+    end
   end
 
   def get_diplomas
@@ -140,5 +144,10 @@ class MainController < ApplicationController
         content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       )
       File.delete(Rails.root.join('tmp', diploma_file))
+    end
+
+    def set_cookies
+      cookies.permanent[:my_diplomas_cart] = cookies[:my_diplomas_cart].presence || request.remote_ip + " / " + Time.now.to_s
+      @orders = Order.where(user: cookies[:my_diplomas_cart]).order(:name)
     end
 end
