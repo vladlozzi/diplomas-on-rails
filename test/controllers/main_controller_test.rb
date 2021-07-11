@@ -35,7 +35,11 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select 'a', "Назад"
     assert_select 'h1', "Деталі замовлення на дипломи " + another.name
-    assert_select 'p', another.xml_file.download.force_encoding('UTF-8')
+    assert_select 'p'
+    order_xml_formatted = ""
+    REXML::Document.new(another.xml_file.download.force_encoding('UTF-8'))
+                   .write(output: order_xml_formatted, indent: 2)
+    assert_select 'pre', order_xml_formatted
   end
 
   test "should upload files, generate diplomas and delete orders from table" do

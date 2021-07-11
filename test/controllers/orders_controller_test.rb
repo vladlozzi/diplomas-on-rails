@@ -13,7 +13,11 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select 'a', "Назад"
     assert_select 'h1', "Деталі замовлення на дипломи " + @order.name
-    assert_select 'p', @order.xml_file.download.force_encoding('UTF-8')
+    assert_select 'p'
+    order_xml_formatted = ""
+    REXML::Document.new(@order.xml_file.download.force_encoding('UTF-8'))
+                   .write(output: order_xml_formatted, indent: 2)
+    assert_select 'pre', order_xml_formatted
   end
 
   test "should upload file and delete order" do
