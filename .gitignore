@@ -29,6 +29,7 @@
 
 /storage
 /vendor
+.idea/
 
 /db/test.sqlite3-*
 

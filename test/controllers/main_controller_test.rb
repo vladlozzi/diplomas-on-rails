@@ -11,6 +11,19 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form input[type=file]', count: 1
     assert_select 'form input[type=submit]', count: 1
     assert_select 'table.orders', count: 0
+    assert_select 'a', "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)"
+  end
+
+  test "get demo page" do
+    get demo_url
+    assert_redirected_to demo_url + "/demo.html"
+    follow_redirect!
+    assert_select 'h2',
+                  'Приклади замовлень у форматі XML для демонстрації ' +
+                  'роботи сервісу "Друк документів про вищу освіту":'
+    assert_select 'ul li a[href="demo1.xml"]', "Завантажити"
+    assert_select 'ul li a[href="demo2.xml"]', "Завантажити"
+    assert_select 'ul li a[href="demo3.xml"]', "Завантажити"
   end
 
   test "must have attached file" do

@@ -33,6 +33,9 @@ class MainController < ApplicationController
     redirect_to root_url
   end
 
+  def demo
+  end
+
   def delete_orders
     if cookies[:my_diplomas_cart].present?
       @orders.each do |order|
