@@ -22,6 +22,9 @@ class MainController < ApplicationController
   def index
   end
 
+  def demo
+  end
+
   def create
     if cookies[:my_diplomas_cart].present? && params[:xml_file].present?
       order = Order.new(name: params[:xml_file].original_filename,
@@ -31,9 +34,6 @@ class MainController < ApplicationController
       order.save
     end
     redirect_to root_url
-  end
-
-  def demo
   end
 
   def delete_orders

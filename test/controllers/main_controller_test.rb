@@ -16,14 +16,13 @@ class MainControllerTest < ActionDispatch::IntegrationTest
 
   test "get demo page" do
     get demo_url
-    assert_redirected_to demo_url + "/demo.html"
-    follow_redirect!
+    assert_response :success
     assert_select 'h2',
                   'Приклади замовлень у форматі XML для демонстрації ' +
                   'роботи сервісу "Друк документів про вищу освіту":'
-    assert_select 'ul li a[href="demo1.xml"]', "Завантажити"
-    assert_select 'ul li a[href="demo2.xml"]', "Завантажити"
-    assert_select 'ul li a[href="demo3.xml"]', "Завантажити"
+    assert_select 'ul li a[href="/demo/demo1.xml"]', "Завантажити"
+    assert_select 'ul li a[href="/demo/demo2.xml"]', "Завантажити"
+    assert_select 'ul li a[href="/demo/demo3.xml"]', "Завантажити"
   end
 
   test "must have attached file" do

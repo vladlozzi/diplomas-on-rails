@@ -4,5 +4,5 @@ Rails.application.routes.draw do
   delete '/' => 'main#delete_orders'
   resources :orders, only: [:show, :destroy]
   get '/diplomas' => 'main#get_diplomas'
-  get '/demo', to: redirect("demo/demo.html")
+  get '/demo' => 'main#demo'
 end

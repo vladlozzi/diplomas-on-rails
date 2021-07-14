@@ -10,7 +10,8 @@
   <%= f.submit "Надіслати файл на сервер" %>
 <% end %>
 
-<%= link_to "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)", demo_path, target: "_blank" %>
+<%= link_to "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)",
+            demo_path, target: "_blank" %>
 
 <% if @orders.presence && @orders.size > 0 %>
   <table class="orders">
