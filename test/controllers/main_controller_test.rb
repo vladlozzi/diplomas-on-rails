@@ -23,6 +23,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'ul li a[href="/demo/demo1.xml"]', "Завантажити"
     assert_select 'ul li a[href="/demo/demo2.xml"]', "Завантажити"
     assert_select 'ul li a[href="/demo/demo3.xml"]', "Завантажити"
+    assert_select 'ul li a[href="/demo/demo4.xml"]', "Завантажити"
+    assert_select 'p', "Після завантаження демо-файлів рекомендовано закрити цю вкладку."
   end
 
   test "must have attached file" do
@@ -76,7 +78,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'table.orders tbody tr td', "t2.xml", count: 1
     assert_select 'table.orders tbody tr td a', "Деталі", count: 2
     assert_select 'table.orders tbody tr td a', "Видалити", count: 2
-    assert_select 'table.orders tbody tr td form input[type=submit]', count: 2
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
     get diplomas_path
     assert_response :success
     assert_equal Diploma.count, 2

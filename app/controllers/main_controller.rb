@@ -39,8 +39,16 @@ class MainController < ApplicationController
   def delete_orders
     if cookies[:my_diplomas_cart].present?
       @orders.each do |order|
-        Diploma.delete_by(order_id: order.id) # Спочатку видаляємо всі дипломи, бо вони належать замовленням
-        order.destroy
+        # Спочатку видаляємо всі дипломи, бо вони належать замовленням
+        Diploma.where(order_id: order.id).all.each do |diploma|
+          diploma.diploma_file.purge
+        end
+        Diploma.delete_by(order_id: order.id)
+      end
+      # Тепер видаляємо замовлення
+      @orders.each do |order|
+        order.xml_file.purge
+        Order.delete_by(id: order.id)
       end
       cookies.delete :my_diplomas_cart
       redirect_to root_url, notice: "Усі замовлення видалено"
@@ -142,6 +150,7 @@ class MainController < ApplicationController
       diploma.number = document["DocumentNumber"]
       diploma.order_id = order_id
       diploma.save
+      diploma.diploma_file.purge
       diploma.diploma_file.attach(
         io: File.open(Rails.root.join('tmp', diploma_file)), filename: diploma_file,
         content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
