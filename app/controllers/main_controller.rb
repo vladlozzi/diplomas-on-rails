@@ -75,9 +75,13 @@ class MainController < ApplicationController
       dt_now[0..3] + "-" + dt_now[4..5] + "-" + dt_now[6..7] + "T" + dt_now[8..13] + ".zip"
     zip_file_path = Rails.root.join('public', zip_name)
     File.file?(zip_file_path) ? File.delete(zip_file_path) : ""
+    red_diplomas_count = 0
+    blue_diplomas_count = 0
     Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
       Diploma.all.each do |diploma|
         filename_to_zip = diploma.diploma_file.filename.to_s
+        red_diplomas_count += 1 if filename_to_zip.include?("(red)")
+        blue_diplomas_count += 1 if filename_to_zip.include?("(blue)")
         File.open(File.join(Rails.root.join('tmp', filename_to_zip)), 'wb') do |file_to_zip|
           diploma.diploma_file.download { |item| file_to_zip.write(item) }
           file_to_zip.close
@@ -90,19 +94,19 @@ class MainController < ApplicationController
       zipped_file_path = Rails.root.join('tmp', diploma.diploma_file.filename.to_s)
       File.delete(zipped_file_path)
     end
-    # send_file(zip_file_path, type: 'application/zip', filename: zip_name)
+    zip_name = "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_" + zip_name
     send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
     File.delete(zip_file_path) and return
-    #   redirect_later send_diplomas_zip_path, msg: "Надсилання архіву з дипломами почнеться через %d сек."
-    redirect_to root_url, notice: "Архів з дипломами " + zip_name + " надіслано в каталог завантажень браузера"
+    #redirect_later send_diplomas_zip_path, msg: "Надсилання архіву з дипломами почнеться через %d сек."
+    #redirect_to root_url, notice: "Архів з дипломами " + zip_name + " надіслано в каталог завантажень браузера"
   end
 
-  def send_diplomas_zip
-    files = Dir.glob(Rails.root.join("public", "diplomas_for_print-*"))
-    zip_file_path = files[0]
-    zip_name = File.basename(zip_file_path)
-    send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
-  end
+  #def send_diplomas_zip
+  #  files = Dir.glob(Rails.root.join("public", "diplomas_for_print-*"))
+  #  zip_file_path = files[0]
+  #  zip_name = File.basename(zip_file_path)
+  #  send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
+  #end
 
   private
 
