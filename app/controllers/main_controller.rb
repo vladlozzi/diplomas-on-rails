@@ -78,21 +78,25 @@ class MainController < ApplicationController
     red_diplomas_count = 0
     blue_diplomas_count = 0
     Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
-      Diploma.all.each do |diploma|
-        filename_to_zip = diploma.diploma_file.filename.to_s
-        red_diplomas_count += 1 if filename_to_zip.include?("(red)")
-        blue_diplomas_count += 1 if filename_to_zip.include?("(blue)")
-        File.open(File.join(Rails.root.join('tmp', filename_to_zip)), 'wb') do |file_to_zip|
-          diploma.diploma_file.download { |item| file_to_zip.write(item) }
-          file_to_zip.close
-          zipfile.add(filename_to_zip, file_to_zip)
+      @orders.each do |order|
+        Diploma.where(order_id: order.id).each do |diploma|
+          filename_to_zip = diploma.diploma_file.filename.to_s
+          red_diplomas_count += 1 if filename_to_zip.include?("(red)")
+          blue_diplomas_count += 1 if filename_to_zip.include?("(blue)")
+          File.open(File.join(Rails.root.join('tmp', filename_to_zip)), 'wb') do |file_to_zip|
+            diploma.diploma_file.download { |item| file_to_zip.write(item) }
+            file_to_zip.close
+            zipfile.add(filename_to_zip, file_to_zip)
+          end
         end
       end
     end
     # Видаляємо файли, які були завантажені зі сховища і збережені в zip-архіві
-    Diploma.all.each do |diploma|
-      zipped_file_path = Rails.root.join('tmp', diploma.diploma_file.filename.to_s)
-      File.delete(zipped_file_path)
+    @orders.each do |order|
+      Diploma.where(order_id: order.id).each do |diploma|
+        zipped_file_path = Rails.root.join('tmp', diploma.diploma_file.filename.to_s)
+        File.delete(zipped_file_path)
+      end
     end
     zip_name = "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_" + zip_name
     send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
@@ -115,51 +119,63 @@ class MainController < ApplicationController
       absent_eng = "information is missing in original document"
       diploma = Diploma.new
       doc_award = document["AdditionalAwardInfo"].present? ? "(red)" : "(blue)" # Цей диплом з відзнакою?
-      template_name = DOC_TEMPLATES[document["DocumentTypeName"]] + doc_award
+      foreigner = document['BeginningUniversityYear'].present? ? ".foreigner" : "" # Іноземець?
+      template_name = DOC_TEMPLATES[document["DocumentTypeName"]] + doc_award + foreigner
       diploma.name = document["DocumentTypeName"] +
         (document["AdditionalAwardInfo"].present? ? " (" + document["AdditionalAwardInfo"] + ") " : " ") +
         document["DocumentSeries"] + " " + document["DocumentNumber"]
       diploma_file = template_name + "." + document["DocumentSeries"] + "." + document["DocumentNumber"] + ".docx"
-      template_file = template_name + ".dotx"
-      doc = Sablon.template(File.expand_path(Rails.root.join('public', 'templates', template_file)))
-      context = {
-        diploma: OpenStruct.new(
-          "seria" => document["DocumentSeries"],
-          "number" => document["DocumentNumber"],
-          "firstNameUkr" => document["FirstName"],
-          "firstNameEng" => document["FirstNameEn"],
-          "lastNameUkr" => document["LastName"],
-          "lastNameEng" => document["LastNameEn"],
-          "sexIssuedUkr" => (document['SexName'] == "Жіноча") ? "закінчила" : "закінчив",
-          "issueYear" => DateTime.parse(document['IssueDate']).year,
-          "sexObtainedUkr" => (document['SexName'] == "Жіноча") ? "здобула" : "здобув",
-          "studyProgramNameUkr" => document['StudyProgramName'].presence || absent_ukr,
-          "studyProgramNameEng" => document['StudyProgramNameEn'].presence || absent_eng,
-          "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || absent_ukr,
-          "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || absent_eng,
-          "industryNameUkr" => document['IndustryName'].presence || absent_ukr,
-          "industryNameEng" => document['IndustryNameEn'].presence || absent_eng,
-          "specialityNameUkr" => document['SpecialityName'].presence || absent_ukr,
-          "specialityNameEng" => document['SpecialityNameEn'].presence || absent_eng,
-          "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || absent_ukr,
-          "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || absent_eng,
-          "graduateDate" =>
-            DateTime.parse(document['GraduateDate']).day.to_s +
-              MONTHS_UKR_ENG[DateTime.parse(document['GraduateDate']).month.to_s] +
-              DateTime.parse(document['GraduateDate']).year.to_s
+      template_filename = template_name + ".dotx"
+      template_file_fullpath = Rails.root.join('public', 'templates', template_filename)
+      if File.file?(template_file_fullpath)
+        template_file = File.expand_path(template_file_fullpath)
+        doc = Sablon.template(template_file)
+        context = {
+          diploma: OpenStruct.new(
+            "seria" => document["DocumentSeries"],
+            "number" => document["DocumentNumber"],
+            "firstNameUkr" => document["FirstName"],
+            "firstNameEng" => document["FirstNameEn"],
+            "lastNameUkr" => document["LastName"],
+            "lastNameEng" => document["LastNameEn"],
+            "sexEnrolledUkr" => (document['SexName'] == "Жіноча") ? "вступила" : "вступив",
+            "beginningUniversityYearUkr" => document['BeginningUniversityYear'].presence || "----",
+            "beginningUniversityYearEng" => document['BeginningUniversityYear'].presence || "----",
+            "beginningUniversityNameUkr" => document['BeginningUniversityName'].presence || absent_ukr,
+            "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || absent_eng,
+            "sexIssuedUkr" => (document['SexName'] == "Жіноча") ? "закінчила" : "закінчив",
+            "issueYear" => DateTime.parse(document['IssueDate']).year,
+            "sexObtainedUkr" => (document['SexName'] == "Жіноча") ? "здобула" : "здобув",
+            "studyProgramNameUkr" => document['StudyProgramName'].presence || absent_ukr,
+            "studyProgramNameEng" => document['StudyProgramNameEn'].presence || absent_eng,
+            "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || absent_ukr,
+            "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || absent_eng,
+            "industryNameUkr" => document['IndustryName'].presence || absent_ukr,
+            "industryNameEng" => document['IndustryNameEn'].presence || absent_eng,
+            "specialityNameUkr" => document['SpecialityName'].presence || absent_ukr,
+            "specialityNameEng" => document['SpecialityNameEn'].presence || absent_eng,
+            "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || absent_ukr,
+            "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || absent_eng,
+            "graduateDate" =>
+              DateTime.parse(document['GraduateDate']).day.to_s +
+                MONTHS_UKR_ENG[DateTime.parse(document['GraduateDate']).month.to_s] +
+                DateTime.parse(document['GraduateDate']).year.to_s
+          )
+        }
+        doc.render_to_file File.expand_path(Rails.root.join('tmp', diploma_file)), context
+        diploma.seria = document["DocumentSeries"]
+        diploma.number = document["DocumentNumber"]
+        diploma.order_id = order_id
+        diploma.save
+        diploma.diploma_file.purge
+        diploma.diploma_file.attach(
+          io: File.open(Rails.root.join('tmp', diploma_file)), filename: diploma_file,
+          content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
-      }
-      doc.render_to_file File.expand_path(Rails.root.join('tmp', diploma_file)), context
-      diploma.seria = document["DocumentSeries"]
-      diploma.number = document["DocumentNumber"]
-      diploma.order_id = order_id
-      diploma.save
-      diploma.diploma_file.purge
-      diploma.diploma_file.attach(
-        io: File.open(Rails.root.join('tmp', diploma_file)), filename: diploma_file,
-        content_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      )
-      File.delete(Rails.root.join('tmp', diploma_file))
+        File.delete(Rails.root.join('tmp', diploma_file))
+      else
+        puts "Файл " + template_file_fullpath.to_s + " не знайдено"
+      end
     end
 
     def set_cookies

@@ -82,7 +82,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     get diplomas_path
     assert_response :success
     assert_equal Diploma.count, 2
-    assert_equal Diploma.first.diploma_file.filename.to_s, "master(blue).M21.000001.docx"
+    assert_equal Diploma.first.diploma_file.filename.to_s, "master(blue).foreigner.M21.000001.docx"
     assert_equal Diploma.second.diploma_file.filename.to_s, "depre.specialist(blue).C21.000976.docx"
     assert_not_nil Diploma.first.diploma_file.download
     assert_not_nil Diploma.second.diploma_file.download
