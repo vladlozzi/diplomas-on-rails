@@ -1,0 +1,204 @@
+<h3><%= link_to "Назад", root_path %></h3><%
+total_documents = 0
+@orders.each do |order| %>
+  <p>Інформація, яка буде надрукована в дипломах (на основі даних в ЄДЕБО, замовлення <%= order.name %>)</p><%
+  # Завантажуємо файл замовлення в хеш
+  diplomas_hash = Hash.from_xml(order.xml_file.download.force_encoding('UTF-8'))
+  diplomas_hash['Documents'].each do |documents|
+    if documents[1].kind_of?(Array)
+      # Документів про освіту в замовленні декілька.
+      # Формуємо унікальні комбінації "спеціальність + освітня програма".
+      speciality_study_programs = []
+      speciality_study_program = ""
+      ssp_index = 0
+      documents[1].each do |document|
+        # puts document['SpecialityName'] + " + " + document['StudyProgramName']
+        unless (document['SpecialityName'] + " + " + document['StudyProgramName'] == speciality_study_program)
+          speciality_study_program = document['SpecialityName'] + " + " + document['StudyProgramName']
+          unless speciality_study_programs.include?(speciality_study_program)
+            speciality_study_programs[ssp_index] = speciality_study_program
+            ssp_index += 1
+          end
+        end
+      end
+      speciality_study_programs.each do |speciality_study_program| %>
+        <table class="check"><%
+        document_index = 0
+        documents[1].each do |document|
+          missing_ukr = (document['IsDuplicate'] == "False" ? @absent_ukr : @missing_orig_ukr)
+          missing_eng = (document['IsDuplicate'] == "False" ? @absent_eng : @missing_orig_eng)
+          if document['SpecialityName'] + " + " + document['StudyProgramName'] == speciality_study_program
+            if document_index == 0 %>
+              <thead>
+                <tr>
+                  <td colspan="3">Заклад освіти</td>
+                  <td colspan="5">
+                    <%= document['UniversityPrintName'] %><br><%= document['UniversityPrintNameEn'] %>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">Освітня програма</td>
+                  <td colspan="5">
+                    <%= document['StudyProgramName'].presence || missing_ukr %><br>
+                    <%= document['StudyProgramNameEn'].presence || missing_eng %>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">Акредитовано</td>
+                  <td colspan="5">
+                    <%= document['AccreditationInstitutionName'].presence || missing_ukr %><br>
+                    <%= document['AccreditationInstitutionNameEn'].presence || missing_eng %>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">Галузь знань</td>
+                  <td colspan="5">
+                    <%= document['IndustryName'].presence || missing_ukr %><br>
+                    <%= document['IndustryNameEn'].presence || missing_eng %>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">Спеціальність</td>
+                  <td colspan="5">
+                    <%= document['SpecialityName'].presence || missing_ukr %><br>
+                    <%= document['SpecialityNameEn'].presence || missing_eng %>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">Спеціалізація (за наявності)</td>
+                  <td colspan="5">
+                    <%= document['SpecializationName'].presence || missing_ukr %><br>
+                    <%= document['SpecializationNameEn'].presence || missing_eng %>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3">Професійна кваліфікація (за наявності)</td>
+                  <td colspan="5">
+                    <%= document['QualificationName'].presence || missing_ukr %><br>
+                    <%= document['QualificationNameEn'].presence || missing_eng %>
+                  </td>
+                </tr>
+                <tr>
+                  <th>№</th><th>Серія,<br>номер</th><th>Імʼя, прізвище<br>укр., лат.</th>
+                  <th>Стать</th><th>Рік<br>закінч.</th><th>Додаткова інформація</th>
+                  <th>Дата видачі</th><th>Статус<br>(оригінал/дублікат)</th>
+                </tr>
+              </thead>
+              <tbody><%
+            end
+            #  if document['SpecialityName'] + " + " + document['StudyProgramName'] == speciality_study_program
+            document_index += 1
+            total_documents += 1 %>
+                <tr>
+                  <th><%= document_index %></th>
+                  <td><%= document['DocumentSeries'] + " " + document['DocumentNumber'] %></td>
+                  <td>
+                    <%= (document['FirstName'].presence || "") + " " + (document['LastName'].presence || "") %><br>
+                    <%= (document['FirstNameEn'].presence || "") + " " + (document['LastNameEn'].presence || "") %>
+                  </td>
+                  <td><%= document['SexName'] %></td>
+                  <td><%= DateTime.parse(document['IssueDate']).year %></td>
+                  <td><%= document['AdditionalAwardInfo'].presence || "" %></td>
+                  <td><%= document['GraduateDate'][0..9] %></td>
+                  <td><%= document['IsDuplicate'] == "False" ? "ОРИГІНАЛ" : "ДУБЛІКАТ" %></td>
+                </tr><%
+          end
+        end %>
+              </tbody>
+              <tfoot>
+                <tr><th colspan="8">Секретар екзаменаційної комісії _______________</th></tr>
+              </tfoot>
+          </table><%
+      end
+    else
+      # Документ про освіту в замовленні один.
+    %>
+      <table class="check"><%
+        document_index = 0
+        document = documents[1]
+        missing_ukr = (document['IsDuplicate'] == "False" ? @absent_ukr : @missing_orig_ukr)
+        missing_eng = (document['IsDuplicate'] == "False" ? @absent_eng : @missing_orig_eng)
+        if document_index == 0 %>
+          <thead>
+            <tr>
+              <td colspan="3">Заклад освіти</td>
+              <td colspan="5">
+                <%= document['UniversityPrintName'] %><br><%= document['UniversityPrintNameEn'] %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">Освітня програма</td>
+              <td colspan="5">
+                <%= document['StudyProgramName'].presence || missing_ukr %><br>
+                <%= document['StudyProgramNameEn'].presence || missing_eng %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">Акредитовано</td>
+              <td colspan="5">
+                <%= document['AccreditationInstitutionName'].presence || missing_ukr %><br>
+                <%= document['AccreditationInstitutionNameEn'].presence || missing_eng %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">Галузь знань</td>
+              <td colspan="5">
+                <%= document['IndustryName'].presence || missing_ukr %><br>
+                <%= document['IndustryNameEn'].presence || missing_eng %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">Спеціальність</td>
+              <td colspan="5">
+                <%= document['SpecialityName'].presence || missing_ukr %><br>
+                <%= document['SpecialityNameEn'].presence || missing_eng %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">Спеціалізація (за наявності)</td>
+              <td colspan="5">
+                <%= document['SpecializationName'].presence || missing_ukr %><br>
+                <%= document['SpecializationNameEn'].presence || missing_eng %>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">Професійна кваліфікація (за наявності)</td>
+              <td colspan="5">
+                <%= document['QualificationName'].presence || missing_ukr %><br>
+                <%= document['QualificationNameEn'].presence || missing_eng %>
+              </td>
+            </tr>
+            <tr>
+              <th>№</th><th>Серія,<br>номер</th><th>Імʼя, прізвище<br>укр., лат.</th>
+              <th>Стать</th><th>Рік<br>закінч.</th><th>Додаткова інформація</th>
+              <th>Дата видачі</th><th>Статус<br>(оригінал/дублікат)</th>
+            </tr>
+          </thead>
+          <tbody><%
+        end
+        document_index += 1
+        total_documents += 1 %>
+            <tr>
+              <th><%= document_index %></th>
+              <td><%= document['DocumentSeries'] + " " + document['DocumentNumber'] %></td>
+              <td>
+                <%= (document['FirstName'].presence || "") + " " + (document['LastName'].presence || "") %><br>
+                <%= (document['FirstNameEn'].presence || "") + " " + (document['LastNameEn'].presence || "") %>
+              </td>
+              <td><%= document['SexName'] %></td>
+              <td><%= DateTime.parse(document['IssueDate']).year %></td>
+              <td><%= document['AdditionalAwardInfo'].presence || "" %></td>
+              <td><%= document['GraduateDate'][0..9] %></td>
+              <td><%= document['IsDuplicate'] == "False" ? "ОРИГІНАЛ" : "ДУБЛІКАТ" %></td>
+            </tr>
+          </tbody>
+          <tfoot>
+          <tr><th colspan="8">Секретар екзаменаційної комісії _______________</th></tr>
+          </tfoot>
+        </table><%
+    end
+  end
+end
+if total_documents > 0 %>
+  <p>Загальна кількість документів у замовленнях - <%= total_documents %></p><%
+end %>

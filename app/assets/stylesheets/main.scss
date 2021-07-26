@@ -10,7 +10,35 @@
     padding-top: 5px;
   }
 }
+.check {
+  margin-top: 10px;
+  border-collapse: collapse;
+  border: 2px solid black;
+  thead tr td {
+    padding: 2px 2px 2px 2px;
+    border: 1px solid black;
+  }
+  thead tr th {
+    padding: 2px 2px 2px 2px;
+    font-size: 80%;
+    border: 1px solid black;
+    background-color: lightgray;
+  }
+  tbody tr td {
+    padding: 2px 2px 2px 2px;
+    border: 1px solid black;
+  }
+  tbody tr th {
+    padding: 2px 2px 2px 2px;
+    border: 1px solid black;
+    font-weight: normal;
+  }
+  tfoot tr th {
+    padding: 20px 2px 16px 2px;
+    font-weight: normal;
+  }
 
+}
 #del_exec_orders {
   padding: 2px 5px 2px 35px;
   vertical-align: top;

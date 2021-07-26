@@ -33,10 +33,15 @@
                 <%= button_to "Видалити все", '/', method: :delete, data: { confirm: "Справді видалити все?" } %>
                 <br><br>
               <% end %>
+              <%= link_to "Інформація для перевірки", check_path %>
+              <br><br>
               <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get %>
             </td>
           <% elsif @orders.size == 1 %>
-            <td><%= button_to "Отримати дипломи в zip", 'diplomas', method: :get %></td>
+            <td>
+              <%= link_to "Інформація для перевірки", check_path %><br><br>
+              <%= button_to "Отримати дипломи в zip", 'diplomas', method: :get %>
+            </td>
           <% end %>
           <% order_index += 1 %>
         </tr>

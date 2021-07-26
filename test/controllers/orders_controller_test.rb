@@ -28,9 +28,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to root_url
     follow_redirect!
-    assert_select 'table.orders tbody td a', "Деталі", count: 1
-    assert_select 'table.orders tbody td a', "Видалити", count: 1
+    assert_select 'table.orders thead tr th', "Назва замовлення"
+    assert_select 'table.orders thead tr th', "Дії"
+    assert_select 'table.orders tbody tr td a', "Деталі", count: 1
+    assert_select 'table.orders tbody tr td a', "Видалити", count: 1
+    assert_select 'table.orders tbody tr td a', "Інформація для перевірки", count: 1
     assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
+    assert_select 'table.orders tfoot tr th',
+                  "Примітка. Zip-файл з дипломами буде надіслано в браузер відповідно до його налаштувань.",
+                  count: 1
     order = Order.where(user: cookies['my_diplomas_cart'], name: 't1.xml').first
     assert_difference "Order.where(user: cookies['my_diplomas_cart']).count", -1 do
       delete order_path(order)

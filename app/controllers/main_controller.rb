@@ -105,26 +105,23 @@ class MainController < ApplicationController
     #redirect_to root_url, notice: "Архів з дипломами " + zip_name + " надіслано в каталог завантажень браузера"
   end
 
-  #def send_diplomas_zip
-  #  files = Dir.glob(Rails.root.join("public", "diplomas_for_print-*"))
-  #  zip_file_path = files[0]
-  #  zip_name = File.basename(zip_file_path)
-  #  send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
-  #end
+  def check
+  end
 
   private
 
     def create_diploma(document, order_id)
-      absent_ukr = "інформація відсутня в первинному документі"
-      absent_eng = "information is missing in original document"
       diploma = Diploma.new
+      missing_ukr = (document['IsDuplicate'] == "False" ? @absent_ukr : @missing_orig_ukr)
+      missing_eng = (document['IsDuplicate'] == "False" ? @absent_eng : @missing_orig_eng)
       doc_award = document["AdditionalAwardInfo"].present? ? "(red)" : "(blue)" # Цей диплом з відзнакою?
       foreigner = document['BeginningUniversityYear'].present? ? ".foreigner" : "" # Іноземець?
       template_name = DOC_TEMPLATES[document["DocumentTypeName"]] + doc_award + foreigner
       diploma.name = document["DocumentTypeName"] +
         (document["AdditionalAwardInfo"].present? ? " (" + document["AdditionalAwardInfo"] + ") " : " ") +
         document["DocumentSeries"] + " " + document["DocumentNumber"]
-      diploma_file = template_name + "." + document["DocumentSeries"] + "." + document["DocumentNumber"] + ".docx"
+      diploma_file = template_name + "." + document["DocumentSeries"] + "." + document["DocumentNumber"] +
+        (document['IsDuplicate'] == "False" ? "" : ".duplicate") + ".docx"
       template_filename = template_name + ".dotx"
       template_file_fullpath = Rails.root.join('public', 'templates', template_filename)
       if File.file?(template_file_fullpath)
@@ -134,28 +131,28 @@ class MainController < ApplicationController
           diploma: OpenStruct.new(
             "seria" => document["DocumentSeries"],
             "number" => document["DocumentNumber"],
-            "firstNameUkr" => document["FirstName"],
-            "firstNameEng" => document["FirstNameEn"],
-            "lastNameUkr" => document["LastName"],
-            "lastNameEng" => document["LastNameEn"],
+            "firstNameUkr" => document["FirstName"].presence || "",
+            "firstNameEng" => document["FirstNameEn"].presence || "",
+            "lastNameUkr" => document["LastName"].presence || "",
+            "lastNameEng" => document["LastNameEn"].presence || "",
             "sexEnrolledUkr" => (document['SexName'] == "Жіноча") ? "вступила" : "вступив",
-            "beginningUniversityYearUkr" => document['BeginningUniversityYear'].presence || "----",
-            "beginningUniversityYearEng" => document['BeginningUniversityYear'].presence || "----",
-            "beginningUniversityNameUkr" => document['BeginningUniversityName'].presence || absent_ukr,
-            "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || absent_eng,
+            "beginningUniversityYearUkr" => document['BeginningUniversityYear'].presence || '"' + missing_ukr + '"',
+            "beginningUniversityYearEng" => document['BeginningUniversityYear'].presence || '"' + missing_eng + '"',
+            "beginningUniversityNameUkr" => document['BeginningUniversityName'].presence || '"' + missing_ukr + '"',
+            "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || '"' + missing_eng + '"',
             "sexIssuedUkr" => (document['SexName'] == "Жіноча") ? "закінчила" : "закінчив",
             "issueYear" => DateTime.parse(document['IssueDate']).year,
             "sexObtainedUkr" => (document['SexName'] == "Жіноча") ? "здобула" : "здобув",
-            "studyProgramNameUkr" => document['StudyProgramName'].presence || absent_ukr,
-            "studyProgramNameEng" => document['StudyProgramNameEn'].presence || absent_eng,
-            "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || absent_ukr,
-            "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || absent_eng,
-            "industryNameUkr" => document['IndustryName'].presence || absent_ukr,
-            "industryNameEng" => document['IndustryNameEn'].presence || absent_eng,
-            "specialityNameUkr" => document['SpecialityName'].presence || absent_ukr,
-            "specialityNameEng" => document['SpecialityNameEn'].presence || absent_eng,
-            "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || absent_ukr,
-            "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || absent_eng,
+            "studyProgramNameUkr" => document['StudyProgramName'].presence || missing_ukr,
+            "studyProgramNameEng" => document['StudyProgramNameEn'].presence || missing_eng,
+            "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || missing_ukr,
+            "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || missing_eng,
+            "industryNameUkr" => document['IndustryName'].presence || missing_ukr,
+            "industryNameEng" => document['IndustryNameEn'].presence || missing_eng,
+            "specialityNameUkr" => document['SpecialityName'].presence || missing_ukr,
+            "specialityNameEng" => document['SpecialityNameEn'].presence || missing_eng,
+            "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || missing_ukr,
+            "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || missing_eng,
             "graduateDate" =>
               DateTime.parse(document['GraduateDate']).day.to_s +
                 MONTHS_UKR_ENG[DateTime.parse(document['GraduateDate']).month.to_s] +
@@ -181,5 +178,9 @@ class MainController < ApplicationController
     def set_cookies
       cookies.permanent[:my_diplomas_cart] = cookies[:my_diplomas_cart].presence || request.remote_ip + " / " + Time.now.to_s
       @orders = Order.where(user: cookies[:my_diplomas_cart]).order(:name)
+      @absent_ukr = "інформація відсутня"
+      @absent_eng = "information is missing"
+      @missing_orig_ukr = "інформація відсутня в первинному документі"
+      @missing_orig_eng = "information is missing in original document"
     end
 end

@@ -9,9 +9,9 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form'
     assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit]', count: 1
+    assert_select 'form input[type=submit][value="Надіслати файл на сервер"]', count: 1
     assert_select 'table.orders', count: 0
-    assert_select 'a', "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)"
+    assert_select 'a[href="/demo"]', "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)"
   end
 
   test "get demo page" do
@@ -59,7 +59,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
   test "should upload files, generate diplomas and delete orders from table" do
     Diploma.delete_all # До цього тесту видаляємо записи про дипломи, які є в тестовій базі,
                         # оскільки контролер згенерує і збереже їх заново,
-                        # і буде конфлікт унікальності у полі Diploma.name
+                        # і буде конфлікт унікальності в полі Diploma.name
     get root_url
     assert_response :success
     assert_select 'table.orders', count: 0
@@ -79,11 +79,19 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'table.orders tbody tr td a', "Деталі", count: 2
     assert_select 'table.orders tbody tr td a', "Видалити", count: 2
     assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
+    get check_path
+    assert_response :success
+    assert_select 'a[href="/"]', "Назад"
+    assert_select 'p',"Інформація, яка буде надрукована в дипломах (на основі даних в ЄДЕБО, замовлення t1.xml)"
+    assert_select 'p',"Інформація, яка буде надрукована в дипломах (на основі даних в ЄДЕБО, замовлення t2.xml)"
+    assert_select 'table.check', count: 2
+    get root_path
+    assert_response :success
     get diplomas_path
     assert_response :success
     assert_equal Diploma.count, 2
     assert_equal Diploma.first.diploma_file.filename.to_s, "master(blue).foreigner.M21.000001.docx"
-    assert_equal Diploma.second.diploma_file.filename.to_s, "depre.specialist(blue).C21.000976.docx"
+    assert_equal Diploma.second.diploma_file.filename.to_s, "depre.specialist(blue).C21.000976.duplicate.docx"
     assert_not_nil Diploma.first.diploma_file.download
     assert_not_nil Diploma.second.diploma_file.download
     assert_not_empty Diploma.first.diploma_file.download
@@ -97,7 +105,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form'
     assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit]', count: 1
+    assert_select 'form input[type=submit][value="Надіслати файл на сервер"]', count: 1
     assert_select 'table.orders', count: 0
   end
 
