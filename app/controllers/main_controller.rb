@@ -56,53 +56,63 @@ class MainController < ApplicationController
   end
 
   def get_diplomas
+    errors = 0
     @orders.each do |order|
       Diploma.delete_by(order_id: order.id) # Спершу видаляємо наявні дипломи з цього замовлення
       diplomas_hash = Hash.from_xml(order.xml_file.download.force_encoding('UTF-8'))
-      diplomas_hash['Documents'].each do |documents|
-        if documents[1].kind_of?(Array)
-          documents[1].each do |document|
-            create_diploma document, order.id
+      if diplomas_hash['Documents'].present?
+        diplomas_hash['Documents'].each do |documents|
+          if documents[1].kind_of?(Array)
+            documents[1].each do |document|
+              create_diploma document, order.id
+            end
+          else
+            create_diploma documents[1], order.id
           end
-        else
-          create_diploma documents[1], order.id
         end
+      else
+        errors += 1
+        flash[:alert] = "#{flash[:alert]}Помилка в структурі XML, замовлення #{order.name}<br />"
       end
     end
-    # Упаковуємо файли дипломів в архів zip
-    dt_now = Time.now.to_s.gsub(/[^0-9]/,'')
-    zip_name = "diplomas_for_print-" +
-      dt_now[0..3] + "-" + dt_now[4..5] + "-" + dt_now[6..7] + "T" + dt_now[8..13] + ".zip"
-    zip_file_path = Rails.root.join('public', zip_name)
-    File.file?(zip_file_path) ? File.delete(zip_file_path) : ""
-    red_diplomas_count = 0
-    blue_diplomas_count = 0
-    Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
+    if errors == 0
+      # Упаковуємо файли дипломів в архів zip
+      dt_now = Time.now.to_s.gsub(/[^0-9]/,'')
+      zip_name = "diplomas_for_print-" +
+        dt_now[0..3] + "-" + dt_now[4..5] + "-" + dt_now[6..7] + "T" + dt_now[8..13] + ".zip"
+      zip_file_path = Rails.root.join('public', zip_name)
+      File.file?(zip_file_path) ? File.delete(zip_file_path) : ""
+      red_diplomas_count = 0
+      blue_diplomas_count = 0
+      Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
+        @orders.each do |order|
+          Diploma.where(order_id: order.id).each do |diploma|
+            filename_to_zip = diploma.diploma_file.filename.to_s
+            red_diplomas_count += 1 if filename_to_zip.include?("(red)")
+            blue_diplomas_count += 1 if filename_to_zip.include?("(blue)")
+            File.open(File.join(Rails.root.join('tmp', filename_to_zip)), 'wb') do |file_to_zip|
+              diploma.diploma_file.download { |item| file_to_zip.write(item) }
+              file_to_zip.close
+              zipfile.add(filename_to_zip, file_to_zip)
+            end
+          end
+        end
+      end
+      # Видаляємо файли, які були завантажені зі сховища і збережені в zip-архіві
       @orders.each do |order|
         Diploma.where(order_id: order.id).each do |diploma|
-          filename_to_zip = diploma.diploma_file.filename.to_s
-          red_diplomas_count += 1 if filename_to_zip.include?("(red)")
-          blue_diplomas_count += 1 if filename_to_zip.include?("(blue)")
-          File.open(File.join(Rails.root.join('tmp', filename_to_zip)), 'wb') do |file_to_zip|
-            diploma.diploma_file.download { |item| file_to_zip.write(item) }
-            file_to_zip.close
-            zipfile.add(filename_to_zip, file_to_zip)
-          end
+          zipped_file_path = Rails.root.join('tmp', diploma.diploma_file.filename.to_s)
+          File.delete(zipped_file_path)
         end
       end
+      zip_name = "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_" + zip_name
+      send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
+      File.delete(zip_file_path) and return
+      #redirect_later send_diplomas_zip_path, msg: "Надсилання архіву з дипломами почнеться через %d сек."
+      #redirect_to root_url, notice: "Архів з дипломами " + zip_name + " надіслано в каталог завантажень браузера"
+    else
+      redirect_to root_url
     end
-    # Видаляємо файли, які були завантажені зі сховища і збережені в zip-архіві
-    @orders.each do |order|
-      Diploma.where(order_id: order.id).each do |diploma|
-        zipped_file_path = Rails.root.join('tmp', diploma.diploma_file.filename.to_s)
-        File.delete(zipped_file_path)
-      end
-    end
-    zip_name = "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_" + zip_name
-    send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
-    File.delete(zip_file_path) and return
-    #redirect_later send_diplomas_zip_path, msg: "Надсилання архіву з дипломами почнеться через %d сек."
-    #redirect_to root_url, notice: "Архів з дипломами " + zip_name + " надіслано в каталог завантажень браузера"
   end
 
   def check
