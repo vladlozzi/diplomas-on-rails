@@ -152,6 +152,8 @@ class MainController < ApplicationController
             "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || '"' + missing_eng + '"',
             "sexIssuedUkr" => (document['SexName'] == "Жіноча") ? "закінчила" : "закінчив",
             "issueYear" => DateTime.parse(document['IssueDate']).year,
+            "issueUniversityNameUkr" => document['UniversityPrintName'].presence || '"' + missing_ukr + '"',
+            "issueUniversityNameEng" => document['UniversityPrintNameEn'].presence || '"' + missing_eng + '"',
             "sexObtainedUkr" => (document['SexName'] == "Жіноча") ? "здобула" : "здобув",
             "studyProgramNameUkr" => document['StudyProgramName'].presence || missing_ukr,
             "studyProgramNameEng" => document['StudyProgramNameEn'].presence || missing_eng,
