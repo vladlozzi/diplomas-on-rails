@@ -26,11 +26,12 @@
         <tr>
           <td><%= order.name %></td>
           <td><%= link_to "Деталі", order %></td>
-          <td><%= link_to "Видалити", order, method: :delete, data: { confirm: "Справді видалити?" } %></td>
+          <td><%= button_to "Видалити", order, method: :delete,
+                            form: { data: { turbo_confirm: "Справді видалити?" } } %></td>
           <% if @orders.size > 1 && order_index == 0 %>
             <td id="del_exec_orders" rowspan=<%= @orders.size %>>
               <% if @orders.size > 3 %>
-                <%= button_to "Видалити все", '/', method: :delete, data: { confirm: "Справді видалити все?" } %>
+                <%= button_to "Видалити все", '/', method: :delete %>
                 <br><br>
               <% end %>
               <%= link_to "Інформація для перевірки", check_path %>

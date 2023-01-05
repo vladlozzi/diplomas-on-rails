@@ -17,7 +17,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
   test "get demo page" do
     get demo_url
     assert_response :success
-    assert_select 'h2',
+    assert_select 'h3',
                   'Приклади замовлень у форматі XML для демонстрації ' +
                   'роботи сервісу "Друк документів про вищу освіту":'
     assert_select 'ul li a[href="/demo/demo1.xml"]', "Завантажити"
@@ -25,6 +25,7 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'ul li a[href="/demo/demo3.xml"]', "Завантажити"
     assert_select 'ul li a[href="/demo/demo4.xml"]', "Завантажити"
     assert_select 'p', "Після завантаження демо-файлів рекомендовано закрити цю вкладку."
+    assert_select 'h5'
   end
 
   test "must have attached file" do
@@ -43,8 +44,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'table.orders thead tr th', "Дії"
     assert_select 'table.orders tbody tr td', "Another.xml", count: 1
     assert_select 'table.orders tbody tr td a', "Деталі", count: 1
-    assert_select 'table.orders tbody tr td a', "Видалити", count: 1
-    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
+    assert_select 'table.orders tbody tr td form input[type=submit][value="Видалити"]', count: 1
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 2
     get order_url(another)
     assert_response :success
     assert_select 'a', "Назад"
@@ -77,8 +78,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'table.orders tbody tr td', "t1.xml", count: 1
     assert_select 'table.orders tbody tr td', "t2.xml", count: 1
     assert_select 'table.orders tbody tr td a', "Деталі", count: 2
-    assert_select 'table.orders tbody tr td a', "Видалити", count: 2
-    assert_select 'table.orders tbody tr td form input[type=submit]', count: 1
+    assert_select 'table.orders tbody tr td form input[type=submit][value="Видалити"]', count: 2
+    assert_select 'table.orders tbody tr td form input[type=submit]', count: 3
     get check_path
     assert_response :success
     assert_select 'a[href="/"]', "Назад"
