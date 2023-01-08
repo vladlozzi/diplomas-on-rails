@@ -16,7 +16,9 @@ class OrdersController < ApplicationController
     # Тепер видаляємо замовлення
     @order.destroy
     respond_to do |format|
-      format.html { redirect_to root_url, notice: "Замовлення " + @order.name + " видалене" }
+      format.html {
+        redirect_to root_url, status: :see_other, notice: "Замовлення " + @order.name + " видалене"
+      }
       format.json { head :no_content }
     end
   end

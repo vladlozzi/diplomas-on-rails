@@ -29,7 +29,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
     follow_redirect!
     assert_select 'table.orders thead tr th', "Назва замовлення"
-    assert_select 'table.orders thead tr th', "Дії"
+    assert_select 'table.orders thead tr th', "Дії з замовленням"
     assert_select 'table.orders tbody tr td a', "Деталі", count: 1
     assert_select 'table.orders tbody tr td form input[type=submit][value="Видалити"]', count: 1
     assert_select 'table.orders tbody tr td a', "Інформація для перевірки", count: 1

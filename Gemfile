@@ -15,7 +15,7 @@ gem 'puma', '~> 5.0'
 gem 'sass-rails', '>= 6'
 gem 'sqlite3'
 gem 'bootstrap'
-gem 'turbo-rails'
+gem 'turbo-rails', "~> 1.0"
 gem 'stimulus-rails'
 # Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks
 # gem 'turbolinks', '~> 5'

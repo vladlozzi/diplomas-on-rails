@@ -1,9 +1,9 @@
+<script>function confirmDelete(message){ if (!confirm(message)) { return false; } }</script>
 <h1>Підготовка до друку документів про вищу освіту</h1>
 <p>
   На цьому сайті на основі інформації з ЄДЕБО (у форматі XML) можна створити<br>
   файли для друку дипломів молодшого бакалавра, бакалавра, магістра (у форматі Microsoft Word .docx).
 </p>
-
 <%= form_with do |f| %>
   <%= f.label "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:" %>
   <%= f.file_field :xml_file %>
@@ -17,7 +17,7 @@
   <table class="orders">
     <thead>
       <tr>
-        <th>Назва замовлення</th><th colspan="3">Дії</th>
+        <th>Назва замовлення</th><th colspan="3">Дії з замовленням</th>
       </tr>
     </thead>
     <tbody>
@@ -27,24 +27,27 @@
           <td><%= order.name %></td>
           <td><%= link_to "Деталі", order %></td>
           <td><%= button_to "Видалити", order, method: :delete,
-                            form: { data: { turbo_confirm: "Справді видалити?" } } %></td>
-          <% if @orders.size > 1 && order_index == 0 %>
-            <td id="del_exec_orders" rowspan=<%= @orders.size %>>
-              <% if @orders.size > 3 %>
-                <%= button_to "Видалити все", '/', method: :delete %>
-                <br><br>
-              <% end %>
-              <%= link_to "Інформація для перевірки", check_path %>
-              <br><br>
-              <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get %>
-            </td>
-          <% elsif @orders.size == 1 %>
-            <td>
-              <%= link_to "Інформація для перевірки", check_path %><br><br>
-              <%= button_to "Отримати дипломи в zip", 'diplomas', method: :get %>
-            </td>
-          <% end %>
-          <% order_index += 1 %>
+                  onclick: "return confirmDelete('Справді видалити замовлення " + order.name + " ?')"
+              %>
+          </td>
+        <% if @orders.size > 1 && order_index == 0 %>
+          <td id="del_exec_orders" rowspan=<%= @orders.size %>>
+            <% if @orders.size > 3 %>
+              <%= button_to "Видалити все", '/', method: :delete,
+                            onclick: "return confirmDelete('Справді видалити всі замовлення?')"
+              %><br><br>
+            <% end %>
+            <%= link_to "Інформація для перевірки", check_path %>
+            <br><br>
+            <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get %>
+          </td>
+        <% elsif @orders.size == 1 %>
+          <td>
+            <%= link_to "Інформація для перевірки", check_path %><br><br>
+            <%= button_to "Отримати дипломи в zip", 'diplomas', method: :get %>
+          </td>
+        <% end %>
+        <% order_index += 1 %>
         </tr>
       <% end %>
     </tbody>
@@ -54,4 +57,8 @@
       </tr>
     </tfoot>
   </table>
+<% end %>
+<br>
+<%= turbo_frame_tag "apples-list" do %>
+
 <% end %>
