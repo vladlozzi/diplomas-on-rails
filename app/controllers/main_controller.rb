@@ -6,6 +6,7 @@ class MainController < ApplicationController
     "Диплом молодшого бакалавра" => "junbachelor",
     "Диплом бакалавра" => "bachelor",
     "Диплом магістра" => "master",
+    "Диплом доктора філософії" => "phd",
     "Диплом молодшого спеціаліста" => "junspec", # останній вступ - 2019р.,
                                                  # останній випуск за нормативного строку навчання 3 роки - 2022р.
     "Диплом спеціаліста" => "depre.specialist", # застарілий, зараз видають лише дублікати
@@ -18,6 +19,8 @@ class MainController < ApplicationController
     "7" => " липня / July ", "8" => " серпня / August ", "9" => " вересня / September ",
     "10" => " жовтня / October ", "11" => " листопада / November ", "12" => " грудня / December "
   }
+  MONTHS_UKR = MONTHS_UKR_ENG.map{ |m_number, m_name| [m_number, m_name.split('/').first] }.to_h
+  MONTHS_ENG = MONTHS_UKR_ENG.map{ |m_number, m_name| [m_number, m_name.split('/').last] }.to_h
 
   def index
   end
@@ -78,16 +81,15 @@ class MainController < ApplicationController
     if errors == 0
       # Упаковуємо файли дипломів в архів zip
       dt_now = Time.now.to_s.gsub(/[^0-9]/,'')
-      zip_name = "diplomas_for_print-" +
-        dt_now[0..3] + "-" + dt_now[4..5] + "-" + dt_now[6..7] + "T" + dt_now[8..13] + ".zip"
+      zip_name = "diplomas_to_print-#{dt_now[0..3]}-#{dt_now[4..5]}-#{dt_now[6..7]}T#{dt_now[8..13]}.zip"
       zip_file_path = Rails.root.join('public', zip_name)
       File.file?(zip_file_path) ? File.delete(zip_file_path) : ""
-      red_diplomas_count = 0
-      blue_diplomas_count = 0
+      total_diplomas_count, red_diplomas_count, blue_diplomas_count = [0, 0, 0]
       Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
         @orders.each do |order|
           Diploma.where(order_id: order.id).each do |diploma|
             filename_to_zip = diploma.diploma_file.filename.to_s
+            total_diplomas_count += 1
             red_diplomas_count += 1 if filename_to_zip.include?("(red)")
             blue_diplomas_count += 1 if filename_to_zip.include?("(blue)")
             File.open(File.join(Rails.root.join('tmp', filename_to_zip)), 'wb') do |file_to_zip|
@@ -105,7 +107,10 @@ class MainController < ApplicationController
           File.delete(zipped_file_path)
         end
       end
-      zip_name = "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_" + zip_name
+      zip_name = (
+        (red_diplomas_count + blue_diplomas_count).zero? ?
+          "(#{total_diplomas_count}total_" : "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_"
+      ) + zip_name
       send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
       File.delete(zip_file_path) and return
       #redirect_later send_diplomas_zip_path, msg: "Надсилання архіву з дипломами почнеться через %d сек."
@@ -124,9 +129,14 @@ class MainController < ApplicationController
       diploma = Diploma.new
       missing_ukr = (document['IsDuplicate'] == "False" ? @absent_ukr : @missing_orig_ukr)
       missing_eng = (document['IsDuplicate'] == "False" ? @absent_eng : @missing_orig_eng)
-      doc_award = document["AdditionalAwardInfo"].present? ? "(red)" : "(blue)" # Цей диплом з відзнакою?
+      if document["DocumentTypeName"] == "Диплом доктора філософії"
+        doc_award = ""
+      else
+        doc_award = document["AdditionalAwardInfo"].present? ? "(red)" : "(blue)" # Цей диплом з відзнакою?
+      end
       foreigner = document['BeginningUniversityYear'].present? ? ".foreigner" : "" # Іноземець?
       template_name = DOC_TEMPLATES[document["DocumentTypeName"]] + doc_award + foreigner
+
       diploma.name = document["DocumentTypeName"] +
         (document["AdditionalAwardInfo"].present? ? " (" + document["AdditionalAwardInfo"] + ") " : " ") +
         document["DocumentSeries"] + " " + document["DocumentNumber"]
@@ -151,6 +161,7 @@ class MainController < ApplicationController
             "beginningUniversityNameUkr" => document['BeginningUniversityName'].presence || '"' + missing_ukr + '"',
             "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || '"' + missing_eng + '"',
             "sexIssuedUkr" => (document['SexName'] == "Жіноча") ? "закінчила" : "закінчив",
+            "sexPreparedUkr" => (document['SexName'] == "Жіноча") ? "виконала" : "виконав",
             "issueYear" => DateTime.parse(document['IssueDate']).year,
             "issueUniversityNameUkr" => document['UniversityPrintName'].presence || '"' + missing_ukr + '"',
             "issueUniversityNameEng" => document['UniversityPrintNameEn'].presence || '"' + missing_eng + '"',
@@ -165,6 +176,14 @@ class MainController < ApplicationController
             "specialityNameEng" => document['SpecialityNameEn'].presence || missing_eng,
             "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || missing_ukr,
             "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || missing_eng,
+            "scientificDegreeDateUkr" => document['ScientificDegreeDate'].present? ?
+              DateTime.parse(document['ScientificDegreeDate']).day.to_s +
+                MONTHS_UKR[DateTime.parse(document['ScientificDegreeDate']).month.to_s] +
+                DateTime.parse(document['ScientificDegreeDate']).year.to_s + "р." : "",
+            "scientificDegreeDateEng" => document['ScientificDegreeDate'].present? ?
+              DateTime.parse(document['ScientificDegreeDate']).day.to_s +
+                MONTHS_ENG[DateTime.parse(document['ScientificDegreeDate']).month.to_s] +
+                DateTime.parse(document['ScientificDegreeDate']).year.to_s : "",
             "graduateDate" =>
               DateTime.parse(document['GraduateDate']).day.to_s +
                 MONTHS_UKR_ENG[DateTime.parse(document['GraduateDate']).month.to_s] +
