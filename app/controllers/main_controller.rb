@@ -109,7 +109,8 @@ class MainController < ApplicationController
       end
       zip_name = (
         (red_diplomas_count + blue_diplomas_count).zero? ?
-          "(#{total_diplomas_count}total_" : "(#{red_diplomas_count}red-#{blue_diplomas_count}blue)_"
+          "(#{total_diplomas_count}total_" :
+          "(#{total_diplomas_count}total-#{red_diplomas_count}red-#{blue_diplomas_count}blue)_"
       ) + zip_name
       send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
       File.delete(zip_file_path) and return

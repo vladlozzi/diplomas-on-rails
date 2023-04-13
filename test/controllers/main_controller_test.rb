@@ -83,8 +83,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     get check_path
     assert_response :success
     assert_select 'a[href="/"]', "Назад"
-    assert_select 'p',"Інформація, яка буде надрукована в дипломах (на основі даних в ЄДЕБО, замовлення t1.xml)"
-    assert_select 'p',"Інформація, яка буде надрукована в дипломах (на основі даних в ЄДЕБО, замовлення t2.xml)"
+    assert_select 'p',"Інформація, яка буде надрукована в документах про освіту (на основі даних в ЄДЕБО, замовлення t1.xml)"
+    assert_select 'p',"Інформація, яка буде надрукована в документах про освіту (на основі даних в ЄДЕБО, замовлення t2.xml)"
     assert_select 'table.check', count: 2
     get root_path
     assert_response :success
