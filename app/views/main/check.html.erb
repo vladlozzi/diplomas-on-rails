@@ -34,54 +34,55 @@ flash[:alert] = ""
                 <thead>
                   <tr>
                     <td colspan="3">Заклад освіти</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['UniversityPrintName'] %><br><%= document['UniversityPrintNameEn'] %>
                     </td>
                   </tr>
                   <tr>
                     <td colspan="3">Освітня програма</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['StudyProgramName'].presence || missing_ukr %><br>
                       <%= document['StudyProgramNameEn'].presence || missing_eng %>
                     </td>
                   </tr>
                   <tr>
                     <td colspan="3">Акредитовано</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['AccreditationInstitutionName'].presence || missing_ukr %><br>
                       <%= document['AccreditationInstitutionNameEn'].presence || missing_eng %>
                     </td>
                   </tr>
                   <tr>
                     <td colspan="3">Галузь знань</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['IndustryName'].presence || missing_ukr %><br>
                       <%= document['IndustryNameEn'].presence || missing_eng %>
                     </td>
                   </tr>
                   <tr>
                     <td colspan="3">Спеціальність</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['SpecialityName'].presence || missing_ukr %><br>
                       <%= document['SpecialityNameEn'].presence || missing_eng %>
                     </td>
                   </tr>
                   <tr>
                     <td colspan="3">Спеціалізація (за наявності)</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['SpecializationName'].presence || missing_ukr %><br>
                       <%= document['SpecializationNameEn'].presence || missing_eng %>
                     </td>
                   </tr>
                   <tr>
                     <td colspan="3">Професійна кваліфікація (за наявності)</td>
-                    <td colspan="5">
+                    <td colspan="6">
                       <%= document['QualificationName'].presence || missing_ukr %><br>
                       <%= document['QualificationNameEn'].presence || missing_eng %>
                     </td>
                   </tr>
                   <tr>
-                    <th>№</th><th>Серія,<br>номер</th><th>Імʼя, прізвище<br>укр., лат.</th>
+                    <th>№</th><th>Серія і номер<br>документа</th><th>Реєстраційний<br>номер додатка</th>
+                    <th>Імʼя, прізвище<br>укр., лат.</th>
                     <th>Стать</th><th>Рік<br>закінч.</th><th>Додаткова інформація</th>
                     <th>Дата видачі</th><th>Статус<br>(оригінал/дублікат)</th>
                   </tr>
@@ -94,6 +95,7 @@ flash[:alert] = ""
                   <tr>
                     <th><%= document_index %></th>
                     <td><%= document['DocumentSeries'] + " " + document['DocumentNumber'] %></td>
+                    <td><%= document['SupplementId'].presence || "" %></td>
                     <td>
                       <%= (document['FirstName'].presence || "") + " " + (document['LastName'].presence || "") %><br>
                       <%= (document['FirstNameEn'].presence || "") + " " + (document['LastNameEn'].presence || "") %>
