@@ -8,17 +8,27 @@
 <%= form_with do |f| %>
   <%= f.label "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:" %>
   <%= f.file_field :xml_file %>
-  <%= f.submit "Надіслати файл на сервер" %>
+  <div><%= f.label "У разі подвійних дипломів вкажіть додаткові параметри замовлення, відсутні в ЄДЕБО, а саме:" %></div>
+  <div>
+    <%= f.label "- виш-партнер (укр. мовою в орудному відмінку - ким, чим?)" %>
+    <%= f.text_field :partner_uk, size: 60 %>
+  </div>
+  <div>
+    <%= f.label "- виш-партнер (англ. мовою)" %>
+    <%= f.text_field :partner_en, size: 60 %>
+  </div>
+  <div><%= f.label "Якщо дипломи не подвійні, залишіть поля вишу-партнера порожніми" %></div>
+  <%= f.submit "Зберегти" %>
 <% end %>
-
-<%= link_to "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)",
-            demo_path, target: "_blank" %>
-
+<div id="demo-page">
+  <%= link_to "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)",
+              demo_path, target: "_blank" %>
+</div>
 <% if @orders.presence && @orders.size > 0 %>
   <table class="orders">
     <thead>
       <tr>
-        <th>Назва замовлення</th><th colspan="3">Дії з замовленням</th>
+        <th>Назва замовлення</th><th>Додаткові параметри замовлення, відсутні в ЄДЕБО</th><th colspan="3">Дії з замовленням</th>
       </tr>
     </thead>
     <tbody>
@@ -26,6 +36,12 @@
       <% @orders.each do |order| %>
         <tr>
           <td><%= order.name %></td>
+          <td>
+            <% if order.partner_uk.present? && order.partner_en.present? %>
+              <div>Подвійні дипломи: у співпраці з <%= order.partner_uk %></div>
+              <div>Dual Degree: in collaboration with <%= order.partner_en %></div>
+            <% end %>
+          </td>
           <td><%= link_to "Деталі", order %></td>
           <td><%= button_to "Видалити", order, method: :delete,
                   onclick: "return confirmDelete('Справді видалити замовлення " + order.name + " ?')"
@@ -54,7 +70,7 @@
     </tbody>
     <tfoot>
       <tr>
-        <th colspan="4">Примітка. Zip-файл з дипломами буде надіслано в браузер відповідно до його налаштувань.</th>
+        <th colspan="5">Примітка. Zip-файл з дипломами буде надіслано в браузер відповідно до його налаштувань.</th>
       </tr>
     </tfoot>
   </table>

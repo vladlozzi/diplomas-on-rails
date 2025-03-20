@@ -1,15 +1,19 @@
 class MainController < ApplicationController
   before_action :set_cookies
   require "sablon"
+  require "ostruct"
 
   DOC_TEMPLATES = {
     "Диплом молодшого бакалавра" => "junbachelor",
     "Диплом бакалавра" => "bachelor",
+    "Військові. Диплом бакалавра" => "bachelor",
     "Диплом магістра" => "master",
+    "Військові. Диплом магістра" => "master",
     "Диплом доктора філософії" => "phd",
     "Диплом молодшого спеціаліста" => "junspec", # останній вступ - 2019р.,
                                                  # останній випуск за нормативного строку навчання 3 роки - 2022р.
-    "Диплом спеціаліста" => "depre.specialist", # застарілий, зараз видають лише дублікати
+    "Диплом спеціаліста" => "depre.specialist",
+    "Військові. Диплом спеціаліста" => "depre.specialist", # застарілий, зараз видають лише дублікати
                                                 # (оригінали видають лише тим, хто вступив до 2016р. включно
                                                 # і кому з якихось причин перенесли випуск)
   }
@@ -32,6 +36,8 @@ class MainController < ApplicationController
     if cookies[:my_diplomas_cart].present? && params[:xml_file].present?
       order = Order.new(name: params[:xml_file].original_filename,
                         xml_file: params[:xml_file],
+                        partner_uk: params[:partner_uk],
+                        partner_en: params[:partner_en],
                         user: cookies[:my_diplomas_cart]
       )
       order.save
@@ -61,16 +67,18 @@ class MainController < ApplicationController
   def get_diplomas
     errors = 0
     @orders.each do |order|
+      partner = { name_uk: order.partner_uk, name_en: order.partner_en }
+      p partner
       Diploma.delete_by(order_id: order.id) # Спершу видаляємо наявні дипломи з цього замовлення
       diplomas_hash = Hash.from_xml(order.xml_file.download.force_encoding('UTF-8'))
       if diplomas_hash['Documents'].present?
         diplomas_hash['Documents'].each do |documents|
           if documents[1].kind_of?(Array)
             documents[1].each do |document|
-              create_diploma document, order.id
+              create_diploma document, order.id, partner
             end
           else
-            create_diploma documents[1], order.id
+            create_diploma documents[1], order.id, partner
           end
         end
       else
@@ -126,7 +134,7 @@ class MainController < ApplicationController
 
   private
 
-    def create_diploma(document, order_id)
+    def create_diploma(document, order_id, partner)
       diploma = Diploma.new
       missing_ukr = (document['IsDuplicate'] == "False" ? @absent_ukr : @missing_orig_ukr)
       missing_eng = (document['IsDuplicate'] == "False" ? @absent_eng : @missing_orig_eng)
@@ -167,8 +175,12 @@ class MainController < ApplicationController
             "issueUniversityNameUkr" => document['UniversityPrintName'].presence || '"' + missing_ukr + '"',
             "issueUniversityNameEng" => document['UniversityPrintNameEn'].presence || '"' + missing_eng + '"',
             "sexObtainedUkr" => (document['SexName'] == "Жіноча") ? "здобула" : "здобув",
+            "dualDiplomasUkr" => partner[:name_uk].present? ? "подвійних дипломів" : "",
+            "dualDiplomasEng" => partner[:name_en].present? ? "Dual Degree" : "",
             "studyProgramNameUkr" => document['StudyProgramName'].presence || missing_ukr,
             "studyProgramNameEng" => document['StudyProgramNameEn'].presence || missing_eng,
+            "partnerNameUkr" => partner[:name_uk].present? ? "(у співпраці з #{partner[:name_uk]})" : "",
+            "partnerNameEng" => partner[:name_en].present? ? "(in collaboration with #{partner[:name_en]})" : "",
             "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || missing_ukr,
             "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || missing_eng,
             "industryNameUkr" => document['IndustryName'].presence || missing_ukr,

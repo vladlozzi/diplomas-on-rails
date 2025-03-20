@@ -10,14 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_07_085614) do
-
+ActiveRecord::Schema[8.0].define(version: 2025_02_21_081451) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
     t.integer "record_id", null: false
     t.integer "blob_id", null: false
-    t.datetime "created_at", precision: 6, null: false
+    t.datetime "created_at", null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
@@ -29,7 +28,7 @@ ActiveRecord::Schema.define(version: 2021_07_07_085614) do
     t.text "metadata"
     t.integer "byte_size", null: false
     t.string "checksum", null: false
-    t.datetime "created_at", precision: 6, null: false
+    t.datetime "created_at", null: false
     t.string "service_name", null: false
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
@@ -46,8 +45,8 @@ ActiveRecord::Schema.define(version: 2021_07_07_085614) do
     t.string "name", null: false
     t.string "diploma_file"
     t.integer "order_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["name"], name: "index_diplomas_on_name", unique: true
     t.index ["order_id"], name: "index_diplomas_on_order_id"
     t.index ["seria", "number"], name: "index_diplomas_on_seria_and_number", unique: true
@@ -55,10 +54,12 @@ ActiveRecord::Schema.define(version: 2021_07_07_085614) do
 
   create_table "orders", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.string "xml_file"
     t.string "user"
+    t.string "partner_uk"
+    t.string "partner_en"
     t.index ["name"], name: "index_orders_on_name", unique: true
   end
 
