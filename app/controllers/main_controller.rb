@@ -68,7 +68,6 @@ class MainController < ApplicationController
     errors = 0
     @orders.each do |order|
       partner = { name_uk: order.partner_uk, name_en: order.partner_en }
-      p partner
       Diploma.delete_by(order_id: order.id) # Спершу видаляємо наявні дипломи з цього замовлення
       diplomas_hash = Hash.from_xml(order.xml_file.download.force_encoding('UTF-8'))
       if diplomas_hash['Documents'].present?

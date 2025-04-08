@@ -7,9 +7,9 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'h1', "Підготовка до друку документів про вищу освіту"
     assert_select 'p', count: 1
     assert_select 'form'
-    assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
+    assert_select 'form label', {text: "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1}
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit][value="Надіслати файл на сервер"]', count: 1
+    assert_select 'form input[type=submit][value="Зберегти"]', count: 1
     assert_select 'table.orders', count: 0
     assert_select 'a[href="/demo"]', "Сторінка з демо-файлами замовлень (буде відкрито в новій вкладці)"
   end
@@ -42,8 +42,8 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_select 'table.orders thead tr th', "Назва замовлення"
     assert_select 'table.orders thead tr th', "Дії з замовленням"
-    assert_select 'table.orders tbody tr td', "Another.xml", count: 1
-    assert_select 'table.orders tbody tr td a', "Деталі", count: 1
+    assert_select 'table.orders tbody tr td', {text: "Another.xml", count: 1}
+    assert_select 'table.orders tbody tr td a', {text: "Деталі", count: 1}
     assert_select 'table.orders tbody tr td form input[type=submit][value="Видалити"]', count: 1
     assert_select 'table.orders tbody tr td form input[type=submit]', count: 2
     get order_url(another)
@@ -75,16 +75,16 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_url
     follow_redirect!
     assert_select 'table.orders'
-    assert_select 'table.orders tbody tr td', "t1.xml", count: 1
-    assert_select 'table.orders tbody tr td', "t2.xml", count: 1
-    assert_select 'table.orders tbody tr td a', "Деталі", count: 2
+    assert_select 'table.orders tbody tr td', {text: "t1.xml", count: 1}
+    assert_select 'table.orders tbody tr td', {text: "t2.xml", count: 1}
+    assert_select 'table.orders tbody tr td a', {text: "Деталі", count: 2}
     assert_select 'table.orders tbody tr td form input[type=submit][value="Видалити"]', count: 2
     assert_select 'table.orders tbody tr td form input[type=submit]', count: 3
     get check_path
     assert_response :success
     assert_select 'a[href="/"]', "Назад"
-    assert_select 'p',"Інформація, яка буде надрукована в документах про освіту (на основі даних в ЄДЕБО, замовлення t1.xml)"
-    assert_select 'p',"Інформація, яка буде надрукована в документах про освіту (на основі даних в ЄДЕБО, замовлення t2.xml)"
+    assert_select 'p', "Інформація, яка буде надрукована в документах про освіту (на основі даних в ЄДЕБО, замовлення t1.xml)"
+    assert_select 'p', "Інформація, яка буде надрукована в документах про освіту (на основі даних в ЄДЕБО, замовлення t2.xml)"
     assert_select 'table.check', count: 2
     get root_path
     assert_response :success
@@ -104,9 +104,9 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     assert_select 'p', count: 2
     assert_select 'p.notice', "Усі замовлення видалено"
     assert_select 'form'
-    assert_select 'form label', "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1
+    assert_select 'form label', {text: "Виберіть файл замовлення .xml, одержаний з ЄДЕБО:", count: 1}
     assert_select 'form input[type=file]', count: 1
-    assert_select 'form input[type=submit][value="Надіслати файл на сервер"]', count: 1
+    assert_select 'form input[type=submit][value="Зберегти"]', count: 1
     assert_select 'table.orders', count: 0
   end
 
