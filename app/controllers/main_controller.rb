@@ -93,6 +93,9 @@ class MainController < ApplicationController
       zip_file_path = Rails.root.join('public', zip_name)
       File.file?(zip_file_path) ? File.delete(zip_file_path) : ""
       total_diplomas_count, red_diplomas_count, blue_diplomas_count = [0, 0, 0]
+      # Синтаксис для RubyZip 3.0 (у майбутньому)
+      # Zip::File.open(zip_file_path, mode: Zip::File::CREATE) do |zipfile|
+      # Синтаксис для RubyZip (у поточній версії)
       Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
         @orders.each do |order|
           Diploma.where(order_id: order.id).each do |diploma|

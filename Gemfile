@@ -1,9 +1,8 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.3.6'
+ruby '>=3.2'
 
-gem 'rspec'
 gem 'rake'
 gem 'rexml'
 gem 'sablon'
@@ -13,7 +12,7 @@ gem 'rails'
 gem 'puma'
 # Use SCSS for stylesheets
 gem 'sass-rails', '>= 6'
-gem 'sqlite3'
+gem 'sqlite3', '>= 2.1'
 gem 'bootstrap'
 gem 'turbo-rails', "~> 1.0"
 gem 'stimulus-rails'
@@ -25,9 +24,9 @@ gem 'jbuilder', '~> 2.7'
 gem 'redis'
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
-
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.4', require: false
+gem 'ostruct'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
@@ -50,7 +49,7 @@ group :test do
   gem 'capybara', '>= 3.26'
   gem 'selenium-webdriver'
   # Easy installation and use of web drivers to run system tests with browsers
-  gem 'webdrivers'
+  gem "webdrivers", "= 5.3.0"
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
