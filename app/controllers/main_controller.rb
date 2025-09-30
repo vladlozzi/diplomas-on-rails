@@ -1,7 +1,9 @@
 class MainController < ApplicationController
   before_action :set_cookies
-  require "sablon"
-  require "ostruct"
+
+  require "fileutils"
+  require "tmpdir"
+  require "zip"
 
   DOC_TEMPLATES = {
     "Диплом молодшого бакалавра" => "junbachelor",
@@ -92,10 +94,8 @@ class MainController < ApplicationController
       zip_file_path = Rails.root.join('public', zip_name)
       File.file?(zip_file_path) ? File.delete(zip_file_path) : ""
       total_diplomas_count, red_diplomas_count, blue_diplomas_count = [0, 0, 0]
-      # Синтаксис для RubyZip 3.0 (у майбутньому)
-      # Zip::File.open(zip_file_path, mode: Zip::File::CREATE) do |zipfile|
-      # Синтаксис для RubyZip (у поточній версії)
-      Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
+      # Синтаксис для RubyZip 3.0
+      Zip::File.open(zip_file_path, create: true) do |zipfile|
         @orders.each do |order|
           Diploma.where(order_id: order.id).each do |diploma|
             filename_to_zip = diploma.diploma_file.filename.to_s
@@ -124,8 +124,6 @@ class MainController < ApplicationController
       ) + zip_name
       send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
       File.delete(zip_file_path) and return
-      #redirect_later send_diplomas_zip_path, msg: "Надсилання архіву з дипломами почнеться через %d сек."
-      #redirect_to root_url, notice: "Архів з дипломами " + zip_name + " надіслано в каталог завантажень браузера"
     else
       redirect_to root_url
     end
@@ -156,56 +154,104 @@ class MainController < ApplicationController
       template_filename = template_name + ".dotx"
       template_file_fullpath = Rails.root.join('public', 'templates', template_filename)
       if File.file?(template_file_fullpath)
-        template_file = File.expand_path(template_file_fullpath)
-        doc = Sablon.template(template_file)
         context = {
-          diploma: OpenStruct.new(
-            "seria" => document["DocumentSeries"],
-            "number" => document["DocumentNumber"],
-            "firstNameUkr" => document["FirstName"].presence || "",
-            "firstNameEng" => document["FirstNameEn"].presence || "",
-            "lastNameUkr" => document["LastName"].presence || "",
-            "lastNameEng" => document["LastNameEn"].presence || "",
-            "sexEnrolledUkr" => (document['SexName'] == "Жіноча") ? "вступила" : "вступив",
-            "beginningUniversityYearUkr" => document['BeginningUniversityYear'].presence || '"' + missing_ukr + '"',
-            "beginningUniversityYearEng" => document['BeginningUniversityYear'].presence || '"' + missing_eng + '"',
-            "beginningUniversityNameUkr" => document['BeginningUniversityName'].presence || '"' + missing_ukr + '"',
-            "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || '"' + missing_eng + '"',
-            "sexIssuedUkr" => (document['SexName'] == "Жіноча") ? "закінчила" : "закінчив",
-            "sexPreparedUkr" => (document['SexName'] == "Жіноча") ? "виконала" : "виконав",
-            "issueYear" => DateTime.parse(document['IssueDate']).year,
-            "issueUniversityNameUkr" => document['UniversityPrintName'].presence || '"' + missing_ukr + '"',
-            "issueUniversityNameEng" => document['UniversityPrintNameEn'].presence || '"' + missing_eng + '"',
-            "sexObtainedUkr" => (document['SexName'] == "Жіноча") ? "здобула" : "здобув",
-            "dualDiplomasUkr" => partner[:name_uk].present? ? "подвійних дипломів" : "",
-            "dualDiplomasEng" => partner[:name_en].present? ? "Dual Degree" : "",
-            "studyProgramNameUkr" => document['StudyProgramName'].presence || missing_ukr,
-            "studyProgramNameEng" => document['StudyProgramNameEn'].presence || missing_eng,
-            "partnerNameUkr" => partner[:name_uk].present? ? "(у співпраці з #{partner[:name_uk]})" : "",
-            "partnerNameEng" => partner[:name_en].present? ? "(in collaboration with #{partner[:name_en]})" : "",
-            "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || missing_ukr,
-            "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || missing_eng,
-            "industryNameUkr" => document['IndustryName'].presence || missing_ukr,
-            "industryNameEng" => document['IndustryNameEn'].presence || missing_eng,
-            "specialityNameUkr" => document['SpecialityName'].presence || missing_ukr,
-            "specialityNameEng" => document['SpecialityNameEn'].presence || missing_eng,
-            "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || missing_ukr,
-            "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || missing_eng,
-            "scientificDegreeDateUkr" => document['ScientificDegreeDate'].present? ?
-              DateTime.parse(document['ScientificDegreeDate']).day.to_s +
-                MONTHS_UKR[DateTime.parse(document['ScientificDegreeDate']).month.to_s] +
-                DateTime.parse(document['ScientificDegreeDate']).year.to_s + "р." : "",
-            "scientificDegreeDateEng" => document['ScientificDegreeDate'].present? ?
-              DateTime.parse(document['ScientificDegreeDate']).day.to_s +
-                MONTHS_ENG[DateTime.parse(document['ScientificDegreeDate']).month.to_s] +
-                DateTime.parse(document['ScientificDegreeDate']).year.to_s : "",
-            "graduateDate" =>
-              DateTime.parse(document['GraduateDate']).day.to_s +
-                MONTHS_UKR_ENG[DateTime.parse(document['GraduateDate']).month.to_s] +
-                DateTime.parse(document['GraduateDate']).year.to_s
-          )
+          "seria" => document["DocumentSeries"],
+          "number" => document["DocumentNumber"],
+          "firstNameUkr" => document["FirstName"].presence || "",
+          "firstNameEng" => document["FirstNameEn"].presence || "",
+          "lastNameUkr" => document["LastName"].presence || "",
+          "lastNameEng" => document["LastNameEn"].presence || "",
+          "sexEnrolledUkr" => document['SexName'] == "Жіноча" ? "вступила" : "вступив",
+          "beginningUniversityYearUkr" => document['BeginningUniversityYear'].presence || "\"#{missing_ukr}\"",
+          "beginningUniversityYearEng" => document['BeginningUniversityYear'].presence || "\"#{missing_eng}\"",
+          "beginningUniversityNameUkr" => document['BeginningUniversityName'].presence || "\"#{missing_ukr}\"",
+          "beginningUniversityNameEng" => document['BeginningUniversityNameEn'].presence || "\"#{missing_eng}\"",
+          "sexIssuedUkr" => document['SexName'] == "Жіноча" ? "закінчила" : "закінчив",
+          "sexPreparedUkr" => document['SexName'] == "Жіноча" ? "виконала" : "виконав",
+          "issueYear" => document['IssueDate'].present? ? DateTime.parse(document['IssueDate']).year.to_s : "",
+          "issueUniversityNameUkr" => document['UniversityPrintName'].presence || "\"#{missing_ukr}\"",
+          "issueUniversityNameEng" => document['UniversityPrintNameEn'].presence || "\"#{missing_eng}\"",
+          "sexObtainedUkr" => document['SexName'] == "Жіноча" ? "здобула" : "здобув",
+          "dualDiplomasUkr" => partner[:name_uk].present? ? "подвійних дипломів" : "",
+          "dualDiplomasEng" => partner[:name_en].present? ? "Dual Degree" : "",
+          "studyProgramNameUkr" => document['StudyProgramName'].presence || missing_ukr,
+          "studyProgramNameEng" => document['StudyProgramNameEn'].presence || missing_eng,
+          "partnerNameUkr" => partner[:name_uk].present? ? "(у співпраці з #{partner[:name_uk]})" : "",
+          "partnerNameEng" => partner[:name_en].present? ? "(in collaboration with #{partner[:name_en]})" : "",
+          "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || missing_ukr,
+          "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || missing_eng,
+          "industryNameUkr" => document['IndustryName'].presence || missing_ukr,
+          "industryNameEng" => document['IndustryNameEn'].presence || missing_eng,
+          "specialityNameUkr" => document['SpecialityName'].presence || missing_ukr,
+          "specialityNameEng" => document['SpecialityNameEn'].presence || missing_eng,
+          "additionalAwardInfoUkr" => document['AdditionalAwardInfo'].presence || missing_ukr,
+          "additionalAwardInfoEng" => document['AdditionalAwardInfoEn'].presence || missing_eng,
+          "scientificDegreeDateUkr" => document['ScientificDegreeDate'].present? ?
+            "#{DateTime.parse(document['ScientificDegreeDate']).day}#{MONTHS_UKR[DateTime.parse(document['ScientificDegreeDate']).month.to_s]}#{DateTime.parse(document['ScientificDegreeDate']).year}р." : "",
+          "scientificDegreeDateEng" => document['ScientificDegreeDate'].present? ?
+            "#{DateTime.parse(document['ScientificDegreeDate']).day}#{MONTHS_ENG[DateTime.parse(document['ScientificDegreeDate']).month.to_s]}#{DateTime.parse(document['ScientificDegreeDate']).year}" : "",
+            "graduateDate" => "#{DateTime.parse(document['GraduateDate']).day}#{MONTHS_UKR_ENG[DateTime.parse(document['GraduateDate']).month.to_s]}#{DateTime.parse(document['GraduateDate']).year}"
         }
-        doc.render_to_file File.expand_path(Rails.root.join('tmp', diploma_file)), context
+
+        doc_fullpath = File.expand_path(Rails.root.join('tmp', diploma_file))
+        template_file = File.expand_path(template_file_fullpath)
+
+        # Розпаковуємо шаблон .dotx як zip-файл у тимчасовий каталог
+
+        temp_dir_path = Rails.root.join('tmp', 'dotx_unpack_').to_s
+        Dir.mkdir(temp_dir_path) unless Dir.exist?(temp_dir_path)
+        # puts "Temp dir: #{temp_dir_path}"
+
+        Zip::File.open(template_file) do |zip|
+          zip.each do |entry|
+            relative_name = entry.name.sub(/\A\/*/, '')
+            entry_path = File.expand_path(File.join(temp_dir_path, relative_name))
+
+            unless entry_path.start_with?(temp_dir_path)
+              raise "Zip Slip detected: #{entry_path}"
+            end
+
+            FileUtils.mkdir_p(File.dirname(entry_path))
+
+            # Витягуємо вручну через IO
+            entry.get_input_stream do |is|
+              File.open(entry_path, 'wb') do |f|
+                IO.copy_stream(is, f)
+              end
+            end
+          end
+        end
+
+        # puts "Розпаковано в: #{temp_dir_path}"
+
+        # Тут працюємо з файлом document.xml:
+        document_path = File.join(temp_dir_path, "word", "document.xml")
+        # p document_path
+        if File.exist?(document_path)
+          content = File.read(document_path)
+          context.each do |key, value|
+            content.gsub!("%%#{key}%%", value)
+          end
+          File.write(document_path, content)
+        end
+
+        # puts "Перегляньте змінений файл #{document_path} і натисніть Enter для продовження"
+        # gets
+
+        Zip::File.open(Rails.root.join('tmp', diploma_file), create: true) do |zip|
+          Dir[File.join(temp_dir_path, '**', '**')].each do |file|
+            next if File.directory?(file)
+            zip_path = file.sub("#{temp_dir_path}/", '')
+            zip.add(zip_path, file)
+          end
+        end
+
+        # puts "Перегляньте створений диплом #{diploma_file} і натисніть Enter для продовження"
+        # gets
+
+        FileUtils.remove_entry(temp_dir_path)
+        # puts "Тимчасовий каталог #{temp_dir_path} видалено"
+
         diploma.seria = document["DocumentSeries"]
         diploma.number = document["DocumentNumber"]
         diploma.order_id = order_id

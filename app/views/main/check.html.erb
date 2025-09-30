@@ -101,7 +101,7 @@ flash[:alert] = ""
                       <%= (document['FirstNameEn'].presence || "") + " " + (document['LastNameEn'].presence || "") %>
                     </td>
                     <td><%= document['SexName'] %></td>
-                    <td><%= DateTime.parse(document['IssueDate']).year %></td>
+                    <td><%= document['IssueDate'].present? ? DateTime.parse(document['IssueDate']).year : "" %></td>
                     <td><%= document['AdditionalAwardInfo'].presence || "" %></td>
                     <td><%= document['GraduateDate'][0..9] %></td>
                     <td><%= document['IsDuplicate'] == "False" ? "ОРИГІНАЛ" : "ДУБЛІКАТ" %></td>
@@ -192,7 +192,7 @@ flash[:alert] = ""
                   <%= (document['FirstNameEn'].presence || "") + " " + (document['LastNameEn'].presence || "") %>
                 </td>
                 <td><%= document['SexName'] %></td>
-                <td><%= DateTime.parse(document['IssueDate']).year %></td>
+                <td><%= document['IssueDate'].present? ? DateTime.parse(document['IssueDate']).year : "" %></td>
                 <td><%= document['AdditionalAwardInfo'].presence || "" %></td>
                 <td><%= document['GraduateDate'][0..9] %></td>
                 <td><%= document['IsDuplicate'] == "False" ? "ОРИГІНАЛ" : "ДУБЛІКАТ" %></td>
