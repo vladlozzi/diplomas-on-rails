@@ -4,6 +4,8 @@ class MainController < ApplicationController
   require "fileutils"
   require "tmpdir"
   require "zip"
+  require 'find'
+  require 'pathname'
 
   DOC_TEMPLATES = {
     "Диплом молодшого бакалавра" => "junbachelor",
@@ -27,6 +29,12 @@ class MainController < ApplicationController
   }
   MONTHS_UKR = MONTHS_UKR_ENG.map{ |m_number, m_name| [m_number, m_name.split('/').first] }.to_h
   MONTHS_ENG = MONTHS_UKR_ENG.map{ |m_number, m_name| [m_number, m_name.split('/').last] }.to_h
+
+  INSTRUMENTAL_DICTIONARY = {
+    "Національне агентство " => "Національним агентством ",
+    "Агентство "             => "Агентством ",
+    "Міністерство "          => "Міністерством "
+  }.freeze
 
   def index
   end
@@ -178,7 +186,8 @@ class MainController < ApplicationController
           "studyProgramNameEng" => document['StudyProgramNameEn'].presence || missing_eng,
           "partnerNameUkr" => partner[:name_uk].present? ? "(у співпраці з #{partner[:name_uk]})" : "",
           "partnerNameEng" => partner[:name_en].present? ? "(in collaboration with #{partner[:name_en]})" : "",
-          "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].presence || missing_ukr,
+          "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].present? ?
+                                                 instrumental_case(document['AccreditationInstitutionName']) : missing_ukr,
           "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || missing_eng,
           "industryNameUkr" => document['IndustryName'].presence || missing_ukr,
           "industryNameEng" => document['IndustryNameEn'].presence || missing_eng,
@@ -222,7 +231,8 @@ class MainController < ApplicationController
           end
         end
 
-        # puts "Розпаковано в: #{temp_dir_path}"
+        # puts "Розпаковано в: #{temp_dir_path}. Перегляньте"
+        # gets
 
         # Тут працюємо з файлом document.xml:
         document_path = File.join(temp_dir_path, "word", "document.xml")
@@ -237,15 +247,28 @@ class MainController < ApplicationController
 
         # puts "Перегляньте змінений файл #{document_path} і натисніть Enter для продовження"
         # gets
-
-        Zip::File.open(Rails.root.join('tmp', diploma_file), create: true) do |zip|
-          Dir[File.join(temp_dir_path, '**', '**')].each do |file|
+        output_path = Rails.root.join('tmp', diploma_file)
+=begin
+        Zip::File.open(output_path, create: true) do |zip|
+          Dir[File.join(temp_dir_path, '**', '*')].each do |file|
+            p file
             next if File.directory?(file)
-            zip_path = file.sub("#{temp_dir_path}/", '')
+            zip_path = file.sub("#{temp_dir_path}/", '').gsub('\\', '/')
+            p zip_path
             zip.add(zip_path, file)
           end
         end
-
+=end
+        Zip::File.open(output_path, create: true) do |zip|
+          Find.find(temp_dir_path) do |file|
+            p file
+            next if File.directory?(file)
+            zip_path = Pathname.new(file).relative_path_from(Pathname.new(temp_dir_path)).to_s.gsub('\\', '/')
+            p zip_path
+            puts "Adding: #{zip_path}" if zip_path.include?('.rels')
+            zip.add(zip_path, file)
+          end
+        end
         # puts "Перегляньте створений диплом #{diploma_file} і натисніть Enter для продовження"
         # gets
 
@@ -275,4 +298,13 @@ class MainController < ApplicationController
       @missing_orig_ukr = "інформація відсутня в первинному документі"
       @missing_orig_eng = "information is missing in original document"
     end
+
+  private
+
+  def instrumental_case(str)
+    # Створюємо регулярний вираз з усіх ключів хешу
+    pattern = Regexp.union(INSTRUMENTAL_DICTIONARY.keys)
+    str.gsub(pattern, INSTRUMENTAL_DICTIONARY)
+    str
+  end
 end

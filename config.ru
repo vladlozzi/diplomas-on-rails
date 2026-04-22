@@ -2,5 +2,12 @@
 
 require_relative "config/environment"
 
+require "rack"
+unless defined?(Rack::File)
+  module Rack
+    File = Files
+  end
+end
+
 run Rails.application
 Rails.application.load_server
