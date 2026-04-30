@@ -47,15 +47,17 @@
             <% end %>
           </td>
           <td><%= link_to "Деталі", order %></td>
-          <td><%= button_to "Видалити", order, method: :delete,
-                  onclick: "return confirmDelete('Справді видалити замовлення " + order.name + " ?')"
+          <td><%= button_to "Видалити", order,
+                            method: :delete,
+                            data: { "turbo-confirm": "Справді видалити замовлення #{order.name}?" }
               %>
           </td>
         <% if @orders.size > 1 && order_index == 0 %>
           <td id="del_exec_orders" rowspan=<%= @orders.size %>>
             <% if @orders.size > 3 %>
-              <%= button_to "Видалити все", '/', method: :delete,
-                            onclick: "return confirmDelete('Справді видалити всі замовлення?')"
+              <%= button_to "Видалити все", '/',
+                            method: :delete,
+                            data: { "turbo-confirm": "Справді видалити всі замовлення?" }
               %><br><br>
             <% end %>
             <%= link_to "Інформація для перевірки", check_path %>
