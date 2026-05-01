@@ -7,7 +7,7 @@
 </p>
 <%= form_with do |f| %>
   <label>Виберіть файл замовлення .xml, одержаний з ЄДЕБО:</label>&nbsp;
-  <%= f.file_field :xml_file %>
+  <%= f.file_field :xml_file, accept: ".xml" %>
   <div>
     <label>
       У разі подвійних дипломів вкажіть додаткові параметри замовлення, відсутні в ЄДЕБО, а саме:
@@ -62,7 +62,7 @@
             <% end %>
             <%= link_to "Інформація для перевірки", check_path %>
             <br><br>
-            <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get %>
+            <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get, data: { turbo: false } %>
           </td>
         <% elsif @orders.size == 1 %>
           <td>

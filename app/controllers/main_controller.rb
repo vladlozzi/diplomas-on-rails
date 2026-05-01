@@ -1,5 +1,6 @@
 class MainController < ApplicationController
   before_action :set_cookies
+  include MainHelper
 
   require "fileutils"
   require "tmpdir"
@@ -29,12 +30,6 @@ class MainController < ApplicationController
   }
   MONTHS_UKR = MONTHS_UKR_ENG.map{ |m_number, m_name| [m_number, m_name.split('/').first] }.to_h
   MONTHS_ENG = MONTHS_UKR_ENG.map{ |m_number, m_name| [m_number, m_name.split('/').last] }.to_h
-
-  INSTRUMENTAL_DICTIONARY = {
-    "Національне агентство " => "Національним агентством ",
-    "Агентство "             => "Агентством ",
-    "Міністерство "          => "Міністерством "
-  }.freeze
 
   def index
   end
@@ -187,7 +182,7 @@ class MainController < ApplicationController
           "partnerNameUkr" => partner[:name_uk].present? ? "(у співпраці з #{partner[:name_uk]})" : "",
           "partnerNameEng" => partner[:name_en].present? ? "(in collaboration with #{partner[:name_en]})" : "",
           "accreditationInstitutionNameUkr" => document['AccreditationInstitutionName'].present? ?
-                                                 instrumental_case(document['AccreditationInstitutionName']) : missing_ukr,
+                                                 institution_to_instrumental(document['AccreditationInstitutionName']) : missing_ukr,
           "accreditationInstitutionNameEng" => document['AccreditationInstitutionNameEn'].presence || missing_eng,
           "industryNameUkr" => document['IndustryName'].presence || missing_ukr,
           "industryNameEng" => document['IndustryNameEn'].presence || missing_eng,
@@ -299,12 +294,4 @@ class MainController < ApplicationController
       @missing_orig_eng = "information is missing in original document"
     end
 
-  private
-
-  def instrumental_case(str)
-    # Створюємо регулярний вираз з усіх ключів хешу
-    pattern = Regexp.union(INSTRUMENTAL_DICTIONARY.keys)
-    str.gsub(pattern, INSTRUMENTAL_DICTIONARY)
-    str
-  end
 end
