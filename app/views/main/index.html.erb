@@ -60,14 +60,17 @@
                             data: { "turbo-confirm": "Справді видалити всі замовлення?" }
               %><br><br>
             <% end %>
-            <%= link_to "Інформація для перевірки", check_path %>
-            <br><br>
-            <%= button_to "Отримати всі дипломи в zip", 'diplomas', method: :get, data: { turbo: false } %>
+            <%= link_to "Інформація для перевірки", check_path %><br><br>
+            <%= form_with url: 'diplomas', method: :get, data: { turbo: false } do %>
+              <%= submit_tag "Отримати всі дипломи в zip" %>
+            <% end %>
           </td>
         <% elsif @orders.size == 1 %>
           <td>
             <%= link_to "Інформація для перевірки", check_path %><br><br>
-            <%= button_to "Отримати дипломи в zip", 'diplomas', method: :get %>
+            <%= form_with url: 'diplomas', method: :get, data: { turbo: false } do %>
+              <%= submit_tag "Отримати дипломи в zip" %>
+            <% end %>
           </td>
         <% end %>
         <% order_index += 1 %>
