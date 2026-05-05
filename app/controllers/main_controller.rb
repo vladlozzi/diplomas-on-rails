@@ -122,7 +122,7 @@ class MainController < ApplicationController
       end
       zip_name = (
         (red_diplomas_count + blue_diplomas_count).zero? ?
-          "(#{total_diplomas_count}total_" :
+          "(#{total_diplomas_count}total)_" :
           "(#{total_diplomas_count}total-#{red_diplomas_count}red-#{blue_diplomas_count}blue)_"
       ) + zip_name
       send_data(File.read(zip_file_path), type: 'application/zip', filename: zip_name)
@@ -243,24 +243,13 @@ class MainController < ApplicationController
         # puts "Перегляньте змінений файл #{document_path} і натисніть Enter для продовження"
         # gets
         output_path = Rails.root.join('tmp', diploma_file)
-=begin
-        Zip::File.open(output_path, create: true) do |zip|
-          Dir[File.join(temp_dir_path, '**', '*')].each do |file|
-            p file
-            next if File.directory?(file)
-            zip_path = file.sub("#{temp_dir_path}/", '').gsub('\\', '/')
-            p zip_path
-            zip.add(zip_path, file)
-          end
-        end
-=end
         Zip::File.open(output_path, create: true) do |zip|
           Find.find(temp_dir_path) do |file|
-            p file
+            # p file
             next if File.directory?(file)
             zip_path = Pathname.new(file).relative_path_from(Pathname.new(temp_dir_path)).to_s.gsub('\\', '/')
-            p zip_path
-            puts "Adding: #{zip_path}" if zip_path.include?('.rels')
+            # p zip_path
+            # puts "Adding: #{zip_path}" if zip_path.include?('.rels')
             zip.add(zip_path, file)
           end
         end
